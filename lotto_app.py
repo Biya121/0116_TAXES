@@ -7,17 +7,33 @@ import random
 import platform
 from matplotlib import font_manager, rc
 
-# --- [수정 1] 한글 폰트 설정을 최상단(import 바로 아래)으로 이동 ---
-# 그래프를 생성하기 전에 시스템이 한글 폰트를 먼저 인식해야 합니다.
-plt.rcParams['axes.unicode_minus'] = False 
+# --- [수정 1] Streamlit Cloud 및 로컬 환경 통합 폰트 설정 ---
+def setup_korean_font():
+    plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
+    
+    try:
+        if platform.system() == 'Windows':
+            # 로컬 윈도우용
+            rc('font', family='Malgun Gothic')
+        elif platform.system() == 'Darwin':
+            # 로컬 맥용
+            rc('font', family='AppleGothic')
+        else:
+            # --- Streamlit Cloud (Linux) 핵심 설정 ---
+            # packages.txt를 통해 설치된 나눔폰트를 적용합니다.
+            rc('font', family='NanumGothic')
+            
+            # 서버 환경에서 폰트 캐시를 업데이트하거나 직접 경로를 지정하기 위한 코드
+            font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+            if os.path.exists(font_path):
+                font_prop = font_manager.FontProperties(fname=font_path)
+                rc('font', family=font_prop.get_name())
+    except:
+        # 폰트 설정 실패 시 에러가 나지 않도록 기본 처리
+        pass
 
-if platform.system() == 'Windows':
-    rc('font', family='Malgun Gothic')
-elif platform.system() == 'Darwin': # Mac
-    rc('font', family='AppleGothic')
-else:
-    # 리눅스 환경(Streamlit Cloud 등)을 대비한 기본 설정
-    rc('font', family='NanumGothic')
+import os
+setup_korean_font()
 
 # --- 앱 제목 및 설명 ---
 st.title("🍀 로또 번호를 만들고, 생성 분석도 하고!")
@@ -44,29 +60,28 @@ if st.button("🚀 로또 번호 생성하기"):
     st.subheader(f"✨ {num_sets}개의 로또 번호")
     st.dataframe(df)
 
-    # 2. 모든 번호를 하나의 리스트로 합쳐서 분포 분석
-    all_numbers = df.values.flatten()
+    all_numbers = df.values.flatten() 
     
     st.divider()
 
-    # 3. 데이터 시각화 (Matplotlib & Seaborn)
+    # 3. 데이터 시각화
     st.subheader("📊 번호 등장 빈도 분석")
     st.write("어떤 숫자가 많이 나왔을까요?")
 
-    # --- [수정 2] 그래프 생성 시 ax 객체에 직접 한글 제목 설정 ---
+    # --- [수정 2] 객체 지향 방식으로 폰트 적용 ---
     fig, ax = plt.subplots(figsize=(12, 6))
     
     sns.histplot(all_numbers, bins=45, kde=True, color="#FF4B4B", ax=ax)
     
-    # plt.title 대신 ax를 사용하여 폰트 설정을 더 명확하게 적용합니다.
-    ax.set_title(f"생성된 {num_sets} 세트 내 번호 분포", fontsize=15)
-    ax.set_xlabel("로또 번호 (1~45)")
-    ax.set_ylabel("등장 횟수")
+    # ax 객체를 통해 직접 제목과 라벨을 설정해야 Cloud에서 더 안정적입니다.
+    ax.set_title(f"생성된 {num_sets} 세트 내 번호 분포", fontsize=15, pad=20)
+    ax.set_xlabel("로또 번호 (1~45)", fontsize=12)
+    ax.set_ylabel("등장 횟수", fontsize=12)
     ax.grid(axis='y', linestyle='--', alpha=0.7)
     
     st.pyplot(fig)
 
-    # 4. 간단한 통계 요약
+    # 4. 통계 요약
     col1, col2 = st.columns(2)
     with col1:
         st.info(f"가장 많이 나온 번호: {pd.Series(all_numbers).mode()[0]}")
