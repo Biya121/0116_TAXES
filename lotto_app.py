@@ -3,132 +3,74 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import random
 import platform
+from matplotlib import font_manager, rc
 
-# ---------------------------
-# 0) 기본 UI 설정
-# ---------------------------
-
-st.set_page_config(
-    page_title="🎰 Streamlit Lotto",
-    page_icon="🎰",
-    layout="centered"
-)
-
-st.title("🎰 로또 번호 생성기 (Streamlit)")
-st.caption("원하는 게임 수 만큼 로또 번호를 생성하고, 번호 출현 빈도를 그래프로 확인합니다.")
-
-# ---------------------------
-# 1) 한글 폰트 설정 (네 코드 방식 유지)
-# ---------------------------
-
-from matplotlib import rc
-plt.rcParams['axes.unicode_minus'] = False  # 마이너스 기호 깨짐 방지
-
+# 1. 한글 폰트 설정 (그래프 깨짐 방지)
+plt.rcParams['axes.unicode_minus'] = False
 if platform.system() == 'Windows':
     rc('font', family='Malgun Gothic')
-elif platform.system() == 'Darwin':  # Mac
+elif platform.system() == 'Darwin': # Mac
     rc('font', family='AppleGothic')
-# Linux(서버/클라우드)는 폰트가 없을 수 있어 기본 폰트로 표시될 수 있음
 
-# ---------------------------
-# 2) 로또 번호 생성 함수
-# ---------------------------
+# --- 앱 제목 및 설명 ---
+st.title("🍀 로또 번호를 만들고, 생성 분석도 하고!")
+st.write("단순한 번호 생성을 넘어, 생성된 번호들의 통계도 볼 수 있어요.")
 
-def generate_lotto(n_games: int, seed: int | None = None):
-    """
-    로또 번호를 n_games(게임 수) 만큼 생성
-    - 1~45 숫자 중 6개를 중복 없이 뽑음
-    - seed를 주면 매번 같은 결과(재현 가능)
-    반환: (n_games, 6) 형태의 numpy 배열
-    """
-    if seed is not None:
-        np.random.seed(seed)
+# --- 사이드바: 설정 ---
+st.sidebar.header("⚙️ 설정")
+num_sets = st.sidebar.number_input("생성할 로또 수", min_value=1, max_value=100, value=5)
 
-    results = []
-    for _ in range(n_games):
-        # replace=False => 중복 없이 추출
-        nums = np.random.choice(np.arange(1, 46), size=6, replace=False)
-        nums.sort()  # 보기 좋게 오름차순 정렬
-        results.append(nums)
+# --- 로또 번호 생성 로직 ---
+def generate_lotto(n):
+    lotto_sets = []
+    for _ in range(n):
+        # 1~45 사이의 숫자 중 6개 중복 없이 추출 후 정렬
+        numbers = sorted(random.sample(range(1, 46), 6))
+        lotto_sets.append(numbers)
+    return lotto_sets
 
-    return np.array(results)
+# --- 실행 버튼 ---
+if st.button("🚀 로또 번호 생성하기"):
+    # 데이터 생성
+    data = generate_lotto(num_sets)
+    
+    # pandas 데이터프레임으로 변환 (컬럼명: 번호1 ~ 번호6)
+    df = pd.DataFrame(data, columns=[f"번호{i}" for i in range(1, 7)])
+    
+    # 1. 결과 보여주기
+    st.subheader(f"✨ {num_sets}개의 로또 번호")
+    st.dataframe(df)
 
-# ---------------------------
-# 3) 입력 위젯 (네 코드의 selectbox/slider 구조 응용)
-# ---------------------------
+    # 2. 모든 번호를 하나의 리스트로 합쳐서 분포 분석
+    all_numbers = df.values.flatten() # 2차원 배열을 1차원으로 펼침
+    
+    st.divider() # 구분선
 
-st.subheader("⚙️ 설정")
+    # 3. 데이터 시각화 (Matplotlib & Seaborn)
+    st.subheader("📊 번호 등장 빈도 분석")
+    st.write("어떤 숫자가 많이 나왔을까요?")
 
-# 몇 게임(몇 줄) 뽑을지
-n_games = st.slider("몇 게임(줄)을 생성할까요?", min_value=1, max_value=20, value=5, step=1)
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    # 히스토그램 및 밀도 그래프 그리기
+    sns.histplot(all_numbers, bins=45, kde=True, color="#FF4B4B", ax=ax)
+    
+    plt.title(f"생성된 {num_sets} 세트 내 번호 분포", fontsize=15)
+    plt.xlabel("로또 번호 (1~45)")
+    plt.ylabel("등장 횟수")
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    # Streamlit에 그래프 출력
+    st.pyplot(fig)
 
-# 랜덤 고정(Seed) 옵션
-use_seed = st.checkbox("🎯 랜덤 고정(Seed) 사용", value=False)
-seed = None
-if use_seed:
-    seed = st.number_input("Seed 값(정수)", min_value=0, max_value=999999, value=2026, step=1)
+    # 4. 간단한 통계 요약
+    col1, col2 = st.columns(2)
+    with col1:
+        st.info(f"가장 많이 나온 번호: {pd.Series(all_numbers).mode()[0]}")
+    with col2:
+        st.success(f"생성된 번호 평균값: {all_numbers.mean():.2f}")
 
-# 그래프 표시 옵션
-show_chart = st.checkbox("📊 번호 출현 빈도 그래프 보기", value=True)
-
-# ---------------------------
-# 4) 버튼 클릭 시 실행 (Streamlit에서 매우 중요!)
-# ---------------------------
-
-st.subheader("✅ 로또 번호 생성")
-
-if st.button("🎲 로또 번호 뽑기"):
-    try:
-        # 4-1) 로또 번호 생성
-        games = generate_lotto(n_games=n_games, seed=seed)
-
-        # 4-2) 표(DataFrame)로 보기 좋게 만들기
-        df_lotto = pd.DataFrame(games, columns=[f"No{i}" for i in range(1, 7)])
-        df_lotto.index = np.arange(1, len(df_lotto) + 1)
-        df_lotto.index.name = "게임"
-
-        st.success("🎉 생성 완료!")
-        st.dataframe(df_lotto, use_container_width=True)
-
-        # ---------------------------
-        # 5) 번호 출현 빈도 계산 + 그래프
-        # ---------------------------
-        if show_chart:
-            st.subheader("📊 번호 출현 빈도")
-
-            # 모든 번호를 한 줄로 펼치기 (예: 5게임이면 총 30개 숫자)
-            flat_nums = df_lotto.values.flatten()
-
-            # 빈도 계산: 1~45에 대해 각각 몇 번 나왔는지
-            # bincount는 0부터 세므로 길이를 46으로 만들고 [1:]로 1~45만 사용
-            counts = np.bincount(flat_nums, minlength=46)[1:]
-            numbers = np.arange(1, 46)
-
-            freq_df = pd.DataFrame({"번호": numbers, "출현횟수": counts})
-
-            # 상위 10개 표
-            st.write("✅ 가장 많이 나온 번호 TOP 10")
-            st.dataframe(
-                freq_df.sort_values("출현횟수", ascending=False).head(10),
-                use_container_width=True
-            )
-
-            # 그래프 그리기 (네 코드처럼 fig, ax 만들고 seaborn 사용)
-            fig, ax = plt.subplots(figsize=(12, 4))
-            sns.barplot(data=freq_df, x="번호", y="출현횟수", ax=ax)
-
-            ax.set_title("번호별 출현 빈도")
-            ax.set_xlabel("번호")
-            ax.set_ylabel("출현횟수")
-
-            st.pyplot(fig)
-
-    except Exception as e:
-        st.error(f"⚠️ 알 수 없는 오류가 발생했습니다. {e}")
-
-# ---------------------------
-# 6) 안내
-# ---------------------------
-
-st.info("📌 연습용 랜덤 생성기입니다. 당첨을 보장하지 않습니다 🙂")
+else:
+    st.info("왼쪽 사이드바에서 세트 수를 정하고 버튼을 눌러주세요!")
