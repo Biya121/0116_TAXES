@@ -1,0 +1,7 @@
+streamlit
+pandas
+matplotlib
+seaborn
+numpy
+
+# 텍스트파일에 이름 적어 놓고 pip install시 자동으로 설치됨
