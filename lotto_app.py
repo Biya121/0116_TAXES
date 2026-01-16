@@ -7,12 +7,17 @@ import random
 import platform
 from matplotlib import font_manager, rc
 
-# 1. 한글 폰트 설정 (그래프 깨짐 방지)
-plt.rcParams['axes.unicode_minus'] = False
+# --- [수정 1] 한글 폰트 설정을 최상단(import 바로 아래)으로 이동 ---
+# 그래프를 생성하기 전에 시스템이 한글 폰트를 먼저 인식해야 합니다.
+plt.rcParams['axes.unicode_minus'] = False 
+
 if platform.system() == 'Windows':
     rc('font', family='Malgun Gothic')
 elif platform.system() == 'Darwin': # Mac
     rc('font', family='AppleGothic')
+else:
+    # 리눅스 환경(Streamlit Cloud 등)을 대비한 기본 설정
+    rc('font', family='NanumGothic')
 
 # --- 앱 제목 및 설명 ---
 st.title("🍀 로또 번호를 만들고, 생성 분석도 하고!")
@@ -26,17 +31,13 @@ num_sets = st.sidebar.number_input("생성할 로또 수", min_value=1, max_valu
 def generate_lotto(n):
     lotto_sets = []
     for _ in range(n):
-        # 1~45 사이의 숫자 중 6개 중복 없이 추출 후 정렬
         numbers = sorted(random.sample(range(1, 46), 6))
         lotto_sets.append(numbers)
     return lotto_sets
 
 # --- 실행 버튼 ---
 if st.button("🚀 로또 번호 생성하기"):
-    # 데이터 생성
     data = generate_lotto(num_sets)
-    
-    # pandas 데이터프레임으로 변환 (컬럼명: 번호1 ~ 번호6)
     df = pd.DataFrame(data, columns=[f"번호{i}" for i in range(1, 7)])
     
     # 1. 결과 보여주기
@@ -44,25 +45,25 @@ if st.button("🚀 로또 번호 생성하기"):
     st.dataframe(df)
 
     # 2. 모든 번호를 하나의 리스트로 합쳐서 분포 분석
-    all_numbers = df.values.flatten() # 2차원 배열을 1차원으로 펼침
+    all_numbers = df.values.flatten()
     
-    st.divider() # 구분선
+    st.divider()
 
     # 3. 데이터 시각화 (Matplotlib & Seaborn)
     st.subheader("📊 번호 등장 빈도 분석")
     st.write("어떤 숫자가 많이 나왔을까요?")
 
+    # --- [수정 2] 그래프 생성 시 ax 객체에 직접 한글 제목 설정 ---
     fig, ax = plt.subplots(figsize=(12, 6))
     
-    # 히스토그램 및 밀도 그래프 그리기
     sns.histplot(all_numbers, bins=45, kde=True, color="#FF4B4B", ax=ax)
     
-    plt.title(f"생성된 {num_sets} 세트 내 번호 분포", fontsize=15)
-    plt.xlabel("로또 번호 (1~45)")
-    plt.ylabel("등장 횟수")
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    # plt.title 대신 ax를 사용하여 폰트 설정을 더 명확하게 적용합니다.
+    ax.set_title(f"생성된 {num_sets} 세트 내 번호 분포", fontsize=15)
+    ax.set_xlabel("로또 번호 (1~45)")
+    ax.set_ylabel("등장 횟수")
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
     
-    # Streamlit에 그래프 출력
     st.pyplot(fig)
 
     # 4. 간단한 통계 요약
