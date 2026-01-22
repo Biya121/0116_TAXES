@@ -1,152 +1,172 @@
 import streamlit as st
 
 # 1. 페이지 설정
-st.set_page_config(page_title="Premium Brand Home", layout="wide")
+st.set_page_config(page_title="Premium Eco-Luxury Brand", layout="wide")
 
-# 2. 브랜드 컬러 및 스타일 정의 (CSS)
+# 2. 고도화된 스타일링 (CSS)
 st.markdown("""
     <style>
-    /* 전체 배경색 및 기본 폰트 설정 */
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Noto+Sans+KR:wght@300;500&display=swap');
     
-    html, body, [class*="css"] {
+    /* 전체 배경 및 기본 폰트 */
+    .main {
+        background-color: #FFFFFF;
+        color: #1A1A1A;
+    }
+    h1, h2, h3 {
+        font-family: 'Playfair Display', serif;
+        color: #1E3932; /* 메인 초록 */
+    }
+    p, div {
         font-family: 'Noto Sans KR', sans-serif;
     }
 
-    .main {
-        background-color: #FFFFFF;
-    }
-
-    /* 상단 배너 섹션 */
-    .hero-container {
-        background: linear-gradient(135deg, #1E3932 0%, #000000 100%);
-        padding: 80px 40px;
-        border-radius: 0px 0px 50px 50px;
+    /* 네비게이션바 느낌의 상단 여백 */
+    .nav-spacer {
+        padding: 20px 0;
         text-align: center;
-        color: #D4AF37;
+        border-bottom: 1px solid #F0F0F0;
         margin-bottom: 50px;
-        border-bottom: 4px solid #D4AF37;
     }
 
-    /* 골드 포인트 텍스트 */
-    .gold-text {
-        color: #D4AF37;
+    /* 히어로 섹션: 화이트 배경에 그린/골드 포인트 */
+    .hero-box {
+        padding: 100px 50px;
+        background-color: #FFFFFF;
+        border-left: 8px solid #1E3932;
+        margin-bottom: 80px;
+    }
+
+    .gold-accent {
+        color: #C5A059; /* 세련된 샴페인 골드 */
         font-weight: bold;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 0.9rem;
     }
 
-    /* 제품 카드 스타일 */
-    .product-box {
-        background-color: #F9F9F9;
-        padding: 25px;
-        border-radius: 15px;
-        border: 1px solid #E0E0E0;
-        border-top: 5px solid #1E3932; /* 그린 포인트 */
-        transition: all 0.3s ease;
-        height: 100%;
+    /* 제품 카드: 화이트 배경 + 그린 테두리 + 골드 하이라이트 */
+    .product-card-v2 {
+        background-color: #FFFFFF;
+        padding: 40px 30px;
+        border: 1px solid #EAEAEA;
+        border-radius: 0px; /* 미니멀한 직각 디자인 */
+        transition: all 0.4s ease;
+        text-align: center;
     }
     
-    .product-box:hover {
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        transform: translateY(-5px);
+    .product-card-v2:hover {
+        border: 1px solid #1E3932;
+        box-shadow: 0 20px 40px rgba(30, 57, 50, 0.05);
     }
 
-    /* 버튼 스타일 통일 */
+    .category-tag {
+        background-color: #1E3932;
+        color: #FFFFFF;
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        display: inline-block;
+    }
+
+    /* 버튼: 블랙 보조색 활용 */
     div.stButton > button {
-        background-color: #000000;
-        color: #D4AF37;
-        border: 1px solid #D4AF37;
-        border-radius: 5px;
-        padding: 10px 20px;
-        font-weight: bold;
+        background-color: #1A1A1A; /* 블랙 보조색 */
+        color: #FFFFFF;
+        border: none;
+        border-radius: 0px;
+        padding: 12px 30px;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        transition: all 0.3s;
     }
     
     div.stButton > button:hover {
-        background-color: #D4AF37;
-        color: #000000;
-        border: 1px solid #000000;
+        background-color: #C5A059; /* 호버 시 골드 */
+        color: white;
+    }
+
+    /* 하단 섹션 */
+    .footer-section {
+        background-color: #1E3932;
+        color: #FFFFFF;
+        padding: 60px;
+        margin-top: 100px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. 메인 콘텐츠 - 히어로 섹션
-st.markdown("""
-    <div class="hero-container">
-        <h1 style='font-size: 3.5rem; letter-spacing: 2px;'>THE ESSENCE OF NATURE</h1>
-        <p style='font-size: 1.3rem; color: #FFFFFF; opacity: 0.9;'>
-            시간이 흘러도 변하지 않는 <span class="gold-text">골드 클래스</span>의 가치를 경험하세요.
-        </p>
-    </div>
+# 3. 상단 네비게이션 로고 (텍스트)
+st.markdown('<div class="nav-spacer"><h2 style="letter-spacing:5px;">HERITAGE</h2></div>', unsafe_allow_html=True)
+
+# 4. 히어로 섹션 (비대칭 레이아웃)
+h_col1, h_col2 = st.columns([1.2, 1])
+
+with h_col1:
+    st.markdown("""
+        <div class="hero-box">
+            <p class="gold-accent">ESTABLISHED 2026</p>
+            <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 20px;">
+                Pure Green,<br><span style="color:#C5A059">True Luxury.</span>
+            </h1>
+            <p style="color: #666; font-size: 1.1rem; max-width: 500px; line-height: 1.8;">
+                우리는 자연의 깊은 녹색에서 영감을 얻습니다. 가장 순수한 화이트의 깨끗함과 
+                시대를 초월하는 골드의 가치를 결합하여 당신만의 특별한 일상을 제안합니다.
+            </p>
+        </div>
     """, unsafe_allow_html=True)
+    st.button("COLLECTION VIEW")
 
-# 4. 제품 소개 및 브랜드 스토리 (2단 구성)
-col1, col2 = st.columns([1, 1], gap="large")
-
-with col1:
-    # 고급스러운 느낌의 무료 이미지 사용
-    st.image("https://images.unsplash.com/photo-1615485242231-3141384a377d?auto=format&fit=crop&q=80&w=800", 
+with h_col2:
+    # 세로로 긴 세련된 이미지 배치
+    st.image("https://images.unsplash.com/photo-1581605405669-fcdf81165afa?auto=format&fit=crop&q=80&w=800", 
              use_container_width=True)
 
-with col2:
-    st.markdown("<h2 style='color: #1E3932;'>Our Heritage</h2>", unsafe_allow_html=True)
-    st.write("""
-    저희 브랜드는 자연에서 얻은 가장 순수한 원료만을 고집합니다. 
-    전문가의 손길을 거쳐 완성된 프리미엄 라인은 당신의 일상에 특별함을 더해줍니다.
-    """)
-    
-    # 특징 리스트
-    st.markdown("""
-    - **🌿 Sustainable**: 지속 가능한 환경을 생각하는 공정
-    - **✨ Premium**: 엄선된 원료와 철저한 품질 관리
-    - **🖤 Timeless**: 유행을 타지 않는 클래식한 가치
-    """)
-    
-    st.button("브랜드 스토리 더보기")
+st.markdown("<br><br><br>", unsafe_allow_html=True)
 
-st.markdown("<br><br>", unsafe_allow_html=True)
-st.divider()
+# 5. 제품 섹션 (화이트 & 그린 톤)
+st.markdown("<h2 style='text-align: center; margin-bottom: 50px;'>Featured Products</h2>", unsafe_allow_html=True)
 
-# 5. 제품 컬렉션 (3단 그리드)
-st.markdown("<h2 style='text-align: center; color: #1E3932;'>Collections</h2>", unsafe_allow_html=True)
-st.markdown("<br>", unsafe_allow_html=True)
+p_col1, p_col2, p_col3 = st.columns(3, gap="medium")
 
-p_col1, p_col2, p_col3 = st.columns(3)
+# 제품 데이터
+products = [
+    {"title": "The First Dew", "cat": "Skin Care", "img": "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=400"},
+    {"title": "Golden Leaf", "cat": "Interior", "img": "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=400"},
+    {"title": "Forest Essence", "cat": "Fragrance", "img": "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?q=80&w=400"}
+]
 
-# 카드형 UI 배치
-with p_col1:
-    st.markdown("""
-        <div class="product-box">
-            <h4 style='color: #1E3932;'>Forest Green</h4>
-            <p style='color: #666;'>자연의 싱그러움을 담은 베이직 라인</p>
-            <h5 class="gold-text">₩55,000</h5>
-        </div>
-    """, unsafe_allow_html=True)
-    st.button("Green 상세", key="p1")
+cols = [p_col1, p_col2, p_col3]
 
-with p_col2:
-    st.markdown("""
-        <div class="product-box" style="border-top: 5px solid #D4AF37;">
-            <h4 style='color: #D4AF37;'>Royal Gold</h4>
-            <p style='color: #666;'>최고의 성분만을 담은 리미티드 에디션</p>
-            <h5 class="gold-text">₩189,000</h5>
-        </div>
-    """, unsafe_allow_html=True)
-    st.button("Gold 상세", key="p2")
+for i, col in enumerate(cols):
+    with col:
+        st.image(products[i]["img"], use_container_width=True)
+        st.markdown(f"""
+            <div class="product-card-v2">
+                <span class="category-tag">{products[i]['cat']}</span>
+                <h3 style="font-size: 1.5rem; margin-bottom: 15px;">{products[i]['title']}</h3>
+                <p style="color: #888; font-size: 0.9rem; margin-bottom: 20px;">
+                    자연 유래 성분과 고귀한 금빛 디테일의 조화.
+                </p>
+                <p class="gold-accent" style="font-size: 1.1rem;">KRW 85,000</p>
+            </div>
+        """, unsafe_allow_html=True)
+        st.button("DETAILS", key=f"details_{i}", use_container_width=True)
 
-with p_col3:
-    st.markdown("""
-        <div class="product-box" style="border-top: 5px solid #000000;">
-            <h4 style='color: #000000;'>Night Black</h4>
-            <p style='color: #666;'>강렬하고 세련된 시그니처 퍼포먼스</p>
-            <h5 class="gold-text">₩95,000</h5>
-        </div>
-    """, unsafe_allow_html=True)
-    st.button("Black 상세", key="p3")
-
-# 6. 하단 푸터
+# 6. 브랜드 푸터 (딥 그린 & 화이트)
 st.markdown("""
-    <br><br><br>
-    <div style='text-align: center; padding: 40px; background-color: #f8f9fa; border-top: 1px solid #eee;'>
-        <p style='color: #1E3932; font-weight: bold;'>PREMIUM BRAND Co.</p>
-        <p style='color: #999; font-size: 0.8rem;'>서울특별시 강남구 테헤란로 | CS: 1588-0000 | 2026 Premium All Rights Reserved.</p>
+    <div class="footer-section">
+        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <h2 style="color: #C5A059; margin-bottom: 20px;">Join the Heritage</h2>
+            <p style="opacity: 0.8; line-height: 2;">
+                브랜드의 새로운 소식과 프라이빗 이벤트를 가장 먼저 만나보세요.<br>
+                우리는 지속 가능한 럭셔리를 지향하며, 모든 제품은 자연에 대한 존중을 담아 제작됩니다.
+            </p>
+            <br>
+            <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 40px;">
+                © 2026 HERITAGE GREEN. PRIVACY POLICY | TERMS OF SERVICE
+            </p>
+        </div>
     </div>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
