@@ -14,7 +14,6 @@ def file_exists(path: str) -> bool:
     return bool(path) and os.path.isfile(path)
 
 def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
-    """Show image if exists; otherwise show a clean placeholder (no warning blocks)."""
     if file_exists(path):
         st.image(path, use_container_width=True)
     else:
@@ -29,169 +28,95 @@ def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
                 display:flex;
                 align-items:center;
                 justify-content:center;
-                box-shadow: 0 12px 24px rgba(0,0,0,0.05);
             ">
-              <div style="
-                    color: rgba(15,26,18,0.55);
-                    font-weight:200;
-                    letter-spacing:0.06rem;
-                    line-height:1.6;
-                    text-align:center;
-                    padding:18px;
-              ">
-                IMAGE PLACEHOLDER<br>
-                <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
-              </div>
+              <div style="color:#666;">{path}</div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-def section_title(text: str):
-    """Centered title without Streamlit heading anchors."""
+def section_title(text):
     st.markdown(
-        """
-        <style>
-        .mn-title{
-          text-align:center;
-          letter-spacing:0.32rem;
-          color:#1B3022;
-          font-weight:200;
-          margin: 72px 0 10px;
-          font-size: 1.35rem;
-        }
-        .mn-subline{
-          width:34px;
-          height:1px;
-          background:#C5A059;
-          margin: 16px auto 34px;
-          opacity:0.95;
-        }
-        </style>
+        f"""
+        <div style="text-align:center;margin:70px 0 14px;
+                    letter-spacing:0.3rem;font-weight:200;color:#1B3022;">
+            {text}
+        </div>
+        <div style="width:32px;height:1px;background:#C5A059;margin:0 auto 36px;"></div>
         """,
         unsafe_allow_html=True
     )
-    st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
-    st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
-
 
 # =========================
-# GLOBAL STYLE
+# STYLE
 # =========================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@200;400;700&display=swap');
 
-:root{
-  --deep:#1B3022;
-  --gold:#C5A059;
-  --paper:#FBFAF7;
-  --muted:rgba(15, 26, 18, 0.62);
-  --shadow-soft: 0 12px 24px rgba(0,0,0,0.06);
-  --shadow: 0 18px 40px rgba(0,0,0,0.08);
-  --radius: 14px;
+html, body, [class*="css"] {
+  font-family: 'Noto Serif KR', serif;
 }
 
-html, body, [class*="css"]{
-  font-family:'Noto Serif KR', serif;
-}
-
-.main .block-container{
+.main .block-container {
   max-width: 1100px;
   margin: 0 auto;
-  padding-top: 4.2rem;
-  padding-bottom: 2.5rem;
+  padding-top: 3rem;
 }
 
-.stApp{
-  background: radial-gradient(1200px 600px at 50% -10%, rgba(197,160,89,0.10), transparent 55%),
-              linear-gradient(to bottom, var(--paper), #ffffff);
-}
-
-/* Header */
-.mn-logo-wrap{ text-align:center; padding: 44px 0 22px; }
-.mn-logo-text{
-  font-size: 3.0rem; letter-spacing: 0.75rem; color: var(--deep); font-weight: 200;
-}
-.mn-line{ width:34px; height:1px; background: var(--gold); margin: 22px auto 0; }
-.mn-logo-tag{
-  margin-top: 12px; color: rgba(15,26,18,0.58); letter-spacing: 0.22rem; font-weight: 200; font-size: 0.95rem;
-}
-
-/* Hero */
-.mn-hero{
-  height: 450px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(255,255,255,0.35);
-  position: relative;
-}
-.mn-hero-overlay{
-  position:absolute; inset:0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.45));
-}
-.mn-hero-content{
-  position:absolute; inset:0;
-  display:flex; align-items:center; justify-content:center;
-  flex-direction:column; text-align:center; padding: 0 16px;
-}
-.mn-hero-h2{ font-size: 1.0rem; color: var(--gold); letter-spacing: 0.48rem; margin:0 0 12px 0; font-weight:200; }
-.mn-hero-h1{ font-size: 2.8rem; font-weight: 200; color: #fff; margin: 0; }
-.mn-hero-p{
-  margin: 16px auto 0; max-width: 720px;
-  color: rgba(255,255,255,0.82); font-weight: 200; line-height: 1.9;
-}
-
-/* Product card (no badge, no extra blank blocks) */
-.mn-card{
-  background: rgba(255,255,255,0.75);
-  border: 1px solid rgba(27,48,34,0.12);
-  border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow-soft);
-}
-.mn-card-title{
-  margin: 14px 0 6px;
-  color: var(--deep);
-  font-weight: 200;
-  font-size: 1.28rem;
-  letter-spacing: 0.05rem;
-}
-.mn-card-desc{
-  margin: 0 0 14px;
-  color: rgba(15,26,18,0.62);
-  line-height: 1.85;
-  font-weight: 200;
-  font-size: 0.95rem;
-}
-
-/* Back button styling */
-.back-btn button{
-  border-radius: 999px !important;
-  font-weight: 200 !important;
-  border: 1px solid rgba(27,48,34,0.20) !important;
-}
-
-/* Footer */
-.mn-footer{
-  margin-top: 120px;
-  padding: 34px 0 10px;
-  border-top: 1px solid rgba(27,48,34,0.18);
+.mn-logo {
   text-align:center;
+  margin-bottom:30px;
 }
-.mn-footer-brand{ letter-spacing: 0.45rem; color: #1B3022; font-weight: 200; font-size: 1.1rem; }
-.mn-footer-muted{ color: rgba(15, 26, 18, 0.55); font-weight: 200; line-height: 1.9; }
+.mn-logo h1 {
+  font-weight:200;
+  letter-spacing:0.7rem;
+}
+.mn-logo p {
+  color:#777;
+  letter-spacing:0.2rem;
+}
 
-/* Tabs center */
-.stTabs [data-baseweb="tab-list"]{ justify-content: center; }
+.mn-card {
+  background:#fff;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.06);
+}
+
+.back-btn button {
+  border-radius:999px !important;
+  border:1px solid rgba(0,0,0,0.2) !important;
+}
+
+.showcase-nav {
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-bottom:10px;
+}
+.showcase-nav button {
+  border-radius:50%;
+  width:42px;
+  height:42px;
+  font-size:20px;
+  border:1px solid rgba(0,0,0,0.25);
+}
 </style>
 """, unsafe_allow_html=True)
 
 
 # =========================
-# DATA (Products) - ALL PNG
+# DATA
 # =========================
+SHOWCASE_IMAGES = [
+    "img1.png",
+    "img2.png",
+    "img3.png",
+    "img4.png",
+    "img5.png"
+]
+
 PRODUCTS = {
     "기름종이": {
         "category": "화장품 & 화장소품",
@@ -214,248 +139,111 @@ PRODUCTS = {
         "list_image": "dopamine.png",
         "detail_image": "dopamine_detail.png",
     },
-    "나이트패치": {
-        "category": "건강식품",
-        "title": "나이트 패치",
-        "desc": "고요한 휴식을 선사하는 아로마 릴렉싱.",
-        "list_image": "night.png",
-        "detail_image": "night_detail.png",
-    },
-    "수세미": {
-        "category": "생활잡화",
-        "title": "코코넛 수세미",
-        "desc": "자연에서 온 거친 섬유의 완벽한 세척력.",
-        "list_image": "scrubber.png",
-        "detail_image": "scrubber_detail.png",
-    },
-    "칫솔": {
-        "category": "생활잡화",
-        "title": "대나무 칫솔",
-        "desc": "지속 가능한 욕실을 위한 친환경 선택.",
-        "list_image": "toothbrush.png",
-        "detail_image": "toothbrush_detail.png",
-    },
 }
 
-# Showcase images - ALL PNG
-SHOWCASE_IMAGES = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
-
 
 # =========================
-# STATE (Simple routing + showcase timer)
+# STATE
 # =========================
 if "page" not in st.session_state:
-    st.session_state.page = "home"   # "home" or "detail"
-if "selected_product_key" not in st.session_state:
-    st.session_state.selected_product_key = None
-if "showcase_i" not in st.session_state:
-    st.session_state.showcase_i = 0
-if "last_switch" not in st.session_state:
-    st.session_state.last_switch = 0.0
+    st.session_state.page = "home"
+if "product" not in st.session_state:
+    st.session_state.product = None
+if "showcase_idx" not in st.session_state:
+    st.session_state.showcase_idx = 0
 
 
 # =========================
-# UI: HEADER
+# HEADER
 # =========================
 st.markdown("""
-<div class="mn-logo-wrap">
-  <div class="mn-logo-text">MADE IN NATURE</div>
-  <div class="mn-line"></div>
-  <div class="mn-logo-tag">Premium Naturalism & Luxury Design</div>
+<div class="mn-logo">
+  <h1>MADE IN NATURE</h1>
+  <p>Premium Naturalism & Luxury Design</p>
 </div>
 """, unsafe_allow_html=True)
 
 
 # =========================
-# UI: HERO (PNG)
+# DETAIL PAGE
 # =========================
-hero_bg = "hero_bg.png"
-if file_exists(hero_bg):
-    st.image(hero_bg, use_container_width=True)
-    st.markdown(
-        "<div style='text-align:center; margin-top:-360px; position:relative; z-index:2;'>"
-        "<div class='mn-hero-h2'>Nature, defined by luxury</div>"
-        "<div class='mn-hero-h1'>자연의 가치를 증명하다</div>"
-        "<div class='mn-hero-p'>원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</div>"
-        "</div>",
-        unsafe_allow_html=True
-    )
-    st.markdown("<div style='height:260px;'></div>", unsafe_allow_html=True)
-else:
-    st.markdown("""
-    <div class="mn-hero" style="background: linear-gradient(135deg, rgba(27,48,34,0.95), rgba(27,48,34,0.65));">
-      <div class="mn-hero-overlay"></div>
-      <div class="mn-hero-content">
-        <div class="mn-hero-h2">Nature, defined by luxury</div>
-        <div class="mn-hero-h1">자연의 가치를 증명하다</div>
-        <div class="mn-hero-p">원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+def render_detail():
+    p = PRODUCTS[st.session_state.product]
 
-st.divider()
-
-
-# =========================
-# PAGE: DETAIL
-# =========================
-def render_detail_page(product_key: str):
-    p = PRODUCTS.get(product_key)
-    if not p:
+    if st.button("← 컬렉션으로 돌아가기"):
         st.session_state.page = "home"
-        st.session_state.selected_product_key = None
+        st.session_state.product = None
         st.rerun()
-
-    # Back to home (Collections)
-    col_l, col_c, col_r = st.columns([1, 2, 1])
-    with col_c:
-        st.markdown('<div class="back-btn">', unsafe_allow_html=True)
-        if st.button("← 컬렉션으로 돌아가기", use_container_width=True):
-            st.session_state.page = "home"
-            st.session_state.selected_product_key = None
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
     section_title("PRODUCT DETAIL")
 
-    st.markdown(
-        f"""
-        <div style="text-align:center; margin-top: 8px;">
-          <div style="color:#1B3022; font-weight:200; font-size:2.0rem; letter-spacing:0.06rem;">
-            {p["title"]}
-          </div>
-          <div style="color: rgba(15,26,18,0.62); font-weight:200; margin-top:10px; line-height:1.9;">
-            {p["desc"]}
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<h2 style='text-align:center;font-weight:200'>{p['title']}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align:center;color:#777'>{p['desc']}</p>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
-
-    # Detail image (PNG)
-    image_or_placeholder(p["detail_image"], height=740, radius=14)
+    image_or_placeholder(p["detail_image"], height=600)
 
 
 # =========================
-# PAGE: HOME (Showcase + Collections)
+# HOME PAGE
 # =========================
-def render_home_page():
-    # BRAND SHOWCASE
+def render_home():
+
+    # ---------- SHOWCASE ----------
     section_title("BRAND SHOWCASE")
 
-    valid_showcase = [p for p in SHOWCASE_IMAGES if file_exists(p)]
+    cols = st.columns([1,2,1])
+    with cols[1]:
+        c1, c2 = st.columns([1,1])
+        with c1:
+            if st.button("‹"):
+                st.session_state.showcase_idx = (st.session_state.showcase_idx - 1) % len(SHOWCASE_IMAGES)
+        with c2:
+            if st.button("›"):
+                st.session_state.showcase_idx = (st.session_state.showcase_idx + 1) % len(SHOWCASE_IMAGES)
 
-    if valid_showcase:
-        # ✅ Reliable time-based rotation (no external package needed)
-        now = time.time()
-        interval_sec = 3.5
+    st.markdown("<div style='max-width:900px;margin:0 auto;'>", unsafe_allow_html=True)
+    image_or_placeholder(SHOWCASE_IMAGES[st.session_state.showcase_idx], height=520)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        if now - st.session_state.last_switch >= interval_sec:
-            st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
-            st.session_state.last_switch = now
-            st.rerun()
-
-        # ✅ Slightly smaller showcase: max-width container
-        st.markdown("<div style='max-width:920px; margin:0 auto;'>", unsafe_allow_html=True)
-        st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    else:
-        # fallback placeholder (PNG)
-        image_or_placeholder("img1.png", height=560, radius=14)
-
-    # COLLECTIONS
+    # ---------- COLLECTION ----------
     section_title("COLLECTIONS")
+    tabs = st.tabs(["화장품 & 화장소품", "건강식품"])
 
-    tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
-
-    def product_card(product_key: str):
-        p = PRODUCTS[product_key]
-        st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
-
-        # list image (PNG)
-        image_or_placeholder(p["list_image"], height=340, radius=14)
-
-        st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
-
-        # Navigate to detail page
-        if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
-            st.session_state.page = "detail"
-            st.session_state.selected_product_key = product_key
-            st.rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Tab layouts (2-column grid)
     with tabs[0]:
-        keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
-        c1, c2 = st.columns(2, gap="large")
-        if len(keys) > 0:
-            with c1: product_card(keys[0])
-        if len(keys) > 1:
-            with c2: product_card(keys[1])
+        for k, v in PRODUCTS.items():
+            if v["category"] == "화장품 & 화장소품":
+                st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
+                image_or_placeholder(v["list_image"], height=300)
+                st.markdown(f"<h4>{v['title']}</h4>", unsafe_allow_html=True)
+                st.markdown(f"<p>{v['desc']}</p>", unsafe_allow_html=True)
+                if st.button("제품 상세 보기", key=k):
+                    st.session_state.page = "detail"
+                    st.session_state.product = k
+                    st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
     with tabs[1]:
-        keys = [k for k, v in PRODUCTS.items() if v["category"] == "건강식품"]
-        c1, c2 = st.columns(2, gap="large")
-        if len(keys) > 0:
-            with c1: product_card(keys[0])
-        if len(keys) > 1:
-            with c2: product_card(keys[1])
-
-    with tabs[2]:
-        keys = [k for k, v in PRODUCTS.items() if v["category"] == "생활잡화"]
-        c1, c2 = st.columns(2, gap="large")
-        if len(keys) > 0:
-            with c1: product_card(keys[0])
-        if len(keys) > 1:
-            with c2: product_card(keys[1])
-
-    # FOOTER
-    st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
-    st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
-    st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
-
-    st.markdown(
-        "<div class='mn-footer-muted'>"
-        "자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>"
-        "우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>"
-        "최상의 원료와 장인 정신을 고집합니다."
-        "</div>",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
-
-    cols = st.columns(4)
-    labels = ["BRAND STORY", "COLLECTIONS", "SUSTAINABILITY", "CONTACT"]
-    urls = ["https://example.com"] * 4
-
-    for i, col in enumerate(cols):
-        with col:
-            try:
-                st.link_button(labels[i], urls[i], use_container_width=True)
-            except Exception:
-                st.button(labels[i], use_container_width=True)
-
-    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-    st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
-    st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
-    st.caption("Instagram. @madeinnature_official")
-    st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  PREMIUM NATURALISM & LUXURY DESIGN.")
-    st.markdown("</div>", unsafe_allow_html=True)
+        for k, v in PRODUCTS.items():
+            if v["category"] == "건강식품":
+                st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
+                image_or_placeholder(v["list_image"], height=300)
+                st.markdown(f"<h4>{v['title']}</h4>", unsafe_allow_html=True)
+                st.markdown(f"<p>{v['desc']}</p>", unsafe_allow_html=True)
+                if st.button("제품 상세 보기", key=k+"2"):
+                    st.session_state.page = "detail"
+                    st.session_state.product = k
+                    st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
 
 # =========================
 # ROUTER
 # =========================
-if st.session_state.page == "detail" and st.session_state.selected_product_key:
-    render_detail_page(st.session_state.selected_product_key)
+if st.session_state.page == "detail":
+    render_detail()
 else:
-    render_home_page()
+    render_home()
+
 
 
 
