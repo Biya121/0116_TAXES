@@ -1,13 +1,14 @@
 import streamlit as st
 import os
 import base64
-from typing import Optional, Dict
+import time
+import streamlit.components.v1 as components
+from typing import Optional, List, Dict
 
 # =========================
 # 0) PAGE CONFIG (MUST BE FIRST)
 # =========================
 st.set_page_config(page_title="Made in Nature | Official", layout="wide")
-
 
 # =========================
 # 1) UTILITIES
@@ -48,9 +49,10 @@ def set_defaults():
 
 set_defaults()
 
-
 # =========================
-# 2) GLOBAL STYLE (Lux details, minimal layout changes)
+# 2) GLOBAL STYLE
+# - Fix header anchor/link icons
+# - Improve luxury details
 # =========================
 st.markdown("""
 <style>
@@ -60,7 +62,6 @@ st.markdown("""
   --deep:#1B3022;
   --gold:#C5A059;
   --paper:#FBFAF7;
-  --ink:#0E1A12;
   --muted:rgba(15, 26, 18, 0.62);
   --line:rgba(27, 48, 34, 0.14);
   --shadow: 0 18px 40px rgba(0,0,0,0.08);
@@ -72,7 +73,6 @@ html, body, [class*="css"]{
   font-family:'Noto Serif KR', serif;
 }
 
-/* main container spacing (keep your wide layout but refined) */
 .main .block-container{
   max-width: 1100px;
   margin: 0 auto;
@@ -80,13 +80,18 @@ html, body, [class*="css"]{
   padding-bottom: 2.5rem;
 }
 
-/* gentle page background */
 .stApp{
   background: radial-gradient(1200px 600px at 50% -10%, rgba(197,160,89,0.10), transparent 55%),
               linear-gradient(to bottom, var(--paper), #ffffff);
 }
 
-/* headings */
+/* ✅ Streamlit 헤더에 붙는 링크(앵커) 아이콘 제거 */
+a.anchor-link { display: none !important; }
+[data-testid="stHeaderActionElements"] { display: none !important; }
+.stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a,
+.stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display:none !important; }
+
+/* Titles */
 .section-title{
   text-align:center;
   letter-spacing:0.35rem;
@@ -101,8 +106,6 @@ html, body, [class*="css"]{
   margin: 16px auto 40px;
   opacity: 0.95;
 }
-
-/* subtle divider */
 .soft-divider{
   width: 100%;
   height: 1px;
@@ -110,7 +113,7 @@ html, body, [class*="css"]{
   margin: 36px 0;
 }
 
-/* Logo header */
+/* Header */
 .logo-container{
   position: relative;
   padding: 54px 0 32px;
@@ -144,10 +147,8 @@ html, body, [class*="css"]{
   filter: blur(0.2px);
 }
 
-/* Hero banner */
-.hero-wrap{
-  margin-top: 14px;
-}
+/* Hero */
+.hero-wrap{ margin-top: 14px; }
 .hero-banner{
   height: 450px;
   border-radius: 6px;
@@ -192,13 +193,7 @@ html, body, [class*="css"]{
   line-height: 1.9;
 }
 
-/* Showcase images */
-.showcase-grid .stImage{
-  border-radius: 10px;
-  overflow:hidden;
-}
-
-/* Card */
+/* Cards */
 .card{
   background: rgba(255,255,255,0.72);
   border: 1px solid rgba(27,48,34,0.12);
@@ -241,7 +236,7 @@ html, body, [class*="css"]{
   margin-bottom: 8px;
 }
 
-/* missing image placeholder */
+/* Missing image placeholder */
 .img-missing{
   border: 1px dashed rgba(27,48,34,0.25);
   border-radius: 12px;
@@ -260,7 +255,7 @@ html, body, [class*="css"]{
   word-break: break-all;
 }
 
-/* footer */
+/* Footer */
 .footer-outer{
   background-color: var(--deep);
   color: #FFFFFF;
@@ -312,7 +307,7 @@ html, body, [class*="css"]{
   font-weight: 200;
 }
 
-/* tighten tab spacing */
+/* Tabs */
 .stTabs [data-baseweb="tab-list"]{
   justify-content: center;
   gap: 8px;
@@ -324,74 +319,170 @@ html, body, [class*="css"]{
 </style>
 """, unsafe_allow_html=True)
 
+# =========================
+# 3) AUTO ROTATION CAROUSEL (1000x1000)
+# =========================
+def auto_carousel(image_paths: List[str], interval_ms: int = 3200, max_size: int = 1000):
+    """
+    Large square carousel (target 1000x1000). Auto-rotates without user interaction.
+    Uses base64 data URLs so it never breaks due to static file serving.
+    """
+    data_urls = [to_data_url(p) for p in image_paths if to_data_url(p)]
+    missing = [p for p in image_paths if not to_data_url(p)]
+
+    if not data_urls:
+        st.markdown(
+            "<div class='img-missing'><div class='img-missing-title'>SHOWCASE IMAGES NOT FOUND</div>"
+            "<div class='img-missing-path'>img1.jpg ~ imgN.jpg 파일을 프로젝트 폴더에 넣어주세요.</div></div>",
+            unsafe_allow_html=True
+        )
+        return
+
+    # Build HTML
+    # - responsive container: max-width 1000px
+    # - aspect-ratio: 1/1 (square)
+    # - fades between slides
+    slides_html = "\n".join(
+        [f"<img class='mn-slide' src='{u}' />" for u in data_urls]
+    )
+
+    html = f"""
+    <div class="mn-carousel-wrap">
+      <div class="mn-carousel" style="max-width:{max_size}px;">
+        {slides_html}
+        <div class="mn-glow"></div>
+      </div>
+    </div>
+
+    <style>
+      .mn-carousel-wrap {{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        margin: 0 auto;
+        padding: 6px 0 0;
+      }}
+      .mn-carousel {{
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.10);
+        border: 1px solid rgba(27,48,34,0.12);
+        background: rgba(255,255,255,0.5);
+      }}
+      .mn-glow {{
+        position:absolute;
+        inset:0;
+        background: radial-gradient(700px 350px at 50% 20%, rgba(197,160,89,0.12), transparent 55%);
+        pointer-events:none;
+      }}
+      .mn-slide {{
+        position:absolute;
+        inset:0;
+        width:100%;
+        height:100%;
+        object-fit: cover;
+        opacity:0;
+        transition: opacity 800ms ease;
+        transform: scale(1.01);
+      }}
+      .mn-slide.active {{
+        opacity:1;
+      }}
+    </style>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll(".mn-slide"));
+      let idx = 0;
+
+      function show(i) {{
+        slides.forEach((s, k) => {{
+          if(k === i) s.classList.add("active");
+          else s.classList.remove("active");
+        }});
+      }}
+
+      if(slides.length > 0) {{
+        show(0);
+        setInterval(() => {{
+          idx = (idx + 1) % slides.length;
+          show(idx);
+        }}, {interval_ms});
+      }}
+    </script>
+    """
+
+    # height 계산: 최대 1000px 정사각형을 유지하되 화면에 맞춰 유연하게
+    # components.html은 height를 지정해야 잘림이 덜함.
+    components.html(html, height=max_size + 40, scrolling=False)
+
+    if missing:
+        # 조용히 안내(에러로 터지지 않게)
+        st.caption("일부 쇼케이스 이미지가 없어 제외되었습니다: " + ", ".join(missing))
 
 # =========================
-# 3) SECTION 1: HEADER
+# 4) SECTION 1: HEADER
 # =========================
 def run_section_1():
-    # 로고 워터마크 (HTML에서 깨지지 않게 data URL 사용)
     logo_path = "logo.png"
     logo_data_url = to_data_url(logo_path)
-
-    logo_img_html = f'<img src="{logo_data_url}" class="logo-bg-image">' if logo_data_url else ""
+    logo_img_html = f'<img src="{logo_data_url}" class="logo-bg-image" alt="logo">' if logo_data_url else ""
 
     st.markdown(f"""
-        <div class="logo-container">
-            {logo_img_html}
-            <div class="logo-text">MADE IN NATURE</div>
-            <div class="section-subline" style="margin:26px auto 0;"></div>
-            <div class="logo-tagline">Premium Naturalism & Luxury Design</div>
-        </div>
+      <div class="logo-container">
+        {logo_img_html}
+        <div class="logo-text">MADE IN NATURE</div>
+        <div class="section-subline" style="margin:26px auto 0;"></div>
+        <div class="logo-tagline">Premium Naturalism & Luxury Design</div>
+      </div>
     """, unsafe_allow_html=True)
 
-run_section_1()
-
-
 # =========================
-# 4) SECTION 2: HERO & SHOWCASE
+# 5) SECTION 2: HERO & SHOWCASE
 # =========================
 def run_section_2():
     hero_bg_path = "hero_bg.jpg"
     hero_data_url = to_data_url(hero_bg_path)
 
-    # hero 배경이 없으면 fallback 배경색
-    bg_style = f'background-image: url("{hero_data_url}"); background-size: cover; background-position: center;' if hero_data_url \
-               else 'background: linear-gradient(135deg, rgba(27,48,34,0.95), rgba(27,48,34,0.65));'
+    bg_style = (
+        f'background-image: url("{hero_data_url}"); background-size: cover; background-position: center;'
+        if hero_data_url
+        else 'background: linear-gradient(135deg, rgba(27,48,34,0.95), rgba(27,48,34,0.65));'
+    )
 
     st.markdown(f"""
-        <div class="hero-wrap">
-          <div class="hero-banner" style='{bg_style}'>
-              <div class="hero-overlay"></div>
-              <div class="hero-content">
-                  <h2>Nature, defined by luxury</h2>
-                  <h1>자연의 가치를 증명하다</h1>
-                  <p>원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</p>
-              </div>
+      <div class="hero-wrap">
+        <div class="hero-banner" style='{bg_style}'>
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <h2>Nature, defined by luxury</h2>
+            <h1>자연의 가치를 증명하다</h1>
+            <p>원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</p>
           </div>
         </div>
+      </div>
     """, unsafe_allow_html=True)
 
     st.markdown("<div class='soft-divider'></div>", unsafe_allow_html=True)
 
-    st.markdown("<h3 style='text-align:center; font-weight:200; color:#1B3022; letter-spacing:0.22rem; margin-top:18px;'>BRAND SHOWCASE</h3>", unsafe_allow_html=True)
-    st.markdown("<div class='section-subline'></div>", unsafe_allow_html=True)
+    # ✅ 헤더는 HTML로 렌더 → 앵커 아이콘 문제도 없음
+    st.markdown("""
+      <h3 style="text-align:center; font-weight:200; color:#1B3022; letter-spacing:0.22rem; margin-top:18px;">
+        BRAND SHOWCASE
+      </h3>
+      <div class="section-subline"></div>
+    """, unsafe_allow_html=True)
 
+    # ✅ 1000x1000 큰 이미지 자동 로테이션 캐러셀
     showcase_images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg"]
-
-    cols = st.columns(5, gap="small")
-    for idx, img_path in enumerate(showcase_images):
-        with cols[idx]:
-            safe_image(img_path, use_container_width=True)
-            st.caption(f"Showcase {idx+1}")
-
-run_section_2()
-
+    auto_carousel(showcase_images, interval_ms=3200, max_size=1000)
 
 # =========================
-# 5) SECTION 3: COLLECTIONS & PRODUCT DETAILS
+# 6) SECTION 3: COLLECTIONS
 # =========================
 def product_card(key: str, badge: str, title: str, desc: str, img_path: str, btn_key: str):
-    """A minimal card wrapper that keeps your existing content but adds polish."""
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f'<div class="badge">{badge}</div>', unsafe_allow_html=True)
     safe_image(img_path, use_container_width=True)
@@ -404,6 +495,7 @@ def product_card(key: str, badge: str, title: str, desc: str, img_path: str, btn
     st.markdown("</div>", unsafe_allow_html=True)
 
 def run_section_3():
+    # ✅ HTML 타이틀로 렌더 → 앵커 아이콘 없음
     st.markdown("<h2 class='section-title'>COLLECTIONS</h2>", unsafe_allow_html=True)
     st.markdown("<div class='section-subline'></div>", unsafe_allow_html=True)
 
@@ -418,7 +510,6 @@ def run_section_3():
         "칫솔": "toothbrush.jpg"
     }
 
-    # Tab 1
     with tabs[0]:
         c1, c2 = st.columns(2, gap="large")
         with c1:
@@ -440,7 +531,6 @@ def run_section_3():
                 btn_key="det2",
             )
 
-    # Tab 2
     with tabs[1]:
         c1, c2 = st.columns(2, gap="large")
         with c1:
@@ -462,7 +552,6 @@ def run_section_3():
                 btn_key="det4",
             )
 
-    # Tab 3
     with tabs[2]:
         c1, c2 = st.columns(2, gap="large")
         with c1:
@@ -484,62 +573,65 @@ def run_section_3():
                 btn_key="det6",
             )
 
-    # Minimal "detail" block (keeps layout; appears below the tabs)
     if st.session_state.selected_product:
         st.markdown("<div class='soft-divider'></div>", unsafe_allow_html=True)
-        st.markdown(
-            f"""
-            <div style="text-align:center; color:#1B3022; font-weight:200; letter-spacing:0.18rem; font-size:1.1rem; margin-bottom:10px;">
-              PRODUCT DETAIL
-            </div>
-            <div class="section-subline" style="margin:14px auto 26px;"></div>
-            """,
-            unsafe_allow_html=True
-        )
+        st.markdown("""
+          <div style="text-align:center; color:#1B3022; font-weight:200; letter-spacing:0.18rem; font-size:1.1rem; margin-bottom:10px;">
+            PRODUCT DETAIL
+          </div>
+          <div class="section-subline" style="margin:14px auto 26px;"></div>
+        """, unsafe_allow_html=True)
+
         p = st.session_state.selected_product
-        # 디테일은 "많이 바꾸지 않기" 위해 간단히만
-        st.info(f"선택된 제품: **{p}**  ·  (여기에 제품 상세 페이지/모달/외부 링크를 연결하면 완성됩니다.)")
-
-run_section_3()
-
+        st.info(f"선택된 제품: **{p}**  ·  (여기에 상세 페이지/외부 링크/멀티페이지 연결을 추가하면 완성됩니다.)")
 
 # =========================
-# 6) SECTION 4: FOOTER
+# 7) SECTION 4: FOOTER (✅ 태그 구조 완전 정리)
 # =========================
 def run_section_4():
+    # ✅ 사용자가 보여준 footer HTML이 “그대로 출력되는” 문제를 막기 위해
+    # ✅ 여기서는 한 번에 완결된 HTML만 st.markdown(unsafe_allow_html=True)로 렌더
     st.markdown("""
-        <div class="footer-outer">
-            <div class="footer-content">
-                <div class="footer-logo">MADE IN NATURE</div>
-                <div class="section-subline" style="margin:0 auto 28px;"></div>
+      <div class="footer-outer">
+        <div class="footer-content">
+          <div class="footer-logo">MADE IN NATURE</div>
+          <div class="section-subline" style="margin:0 auto 28px;"></div>
 
-                <p class="footer-info">
-                    자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>
-                    우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>
-                    최상의 원료와 장인 정신을 고집합니다.
-                </p>
+          <p class="footer-info">
+            자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>
+            우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>
+            최상의 원료와 장인 정신을 고집합니다.
+          </p>
 
-                <div class="footer-links">
-                    <a href="#">BRAND STORY</a>
-                    <a href="#">COLLECTIONS</a>
-                    <a href="#">SUSTAINABILITY</a>
-                    <a href="#">CONTACT</a>
-                </div>
+          <div class="footer-links">
+            <a href="#">BRAND STORY</a>
+            <a href="#">COLLECTIONS</a>
+            <a href="#">SUSTAINABILITY</a>
+            <a href="#">CONTACT</a>
+          </div>
 
-                <div style="color: rgba(255,255,255,0.62); font-size: 0.90rem; line-height: 1.9; font-weight:200;">
-                    주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123<br>
-                    Customer Care. 02-1234-5678 | Email. official@madeinnature.com<br>
-                    Instagram. @madeinnature_official
-                </div>
+          <div style="color: rgba(255,255,255,0.62); font-size: 0.90rem; line-height: 1.9; font-weight:200;">
+            주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123<br>
+            Customer Care. 02-1234-5678 | Email. official@madeinnature.com<br>
+            Instagram. @madeinnature_official
+          </div>
 
-                <div class="copyright">
-                    © 2026 MADE IN NATURE. ALL RIGHTS RESERVED.<br>
-                    PREMIUM NATURALISM & LUXURY DESIGN.
-                </div>
-            </div>
+          <div class="copyright">
+            © 2026 MADE IN NATURE. ALL RIGHTS RESERVED.<br>
+            PREMIUM NATURALISM & LUXURY DESIGN.
+          </div>
         </div>
+      </div>
     """, unsafe_allow_html=True)
 
-run_section_4()
+# =========================
+# 8) MAIN
+# =========================
+def main():
+    run_section_1()
+    run_section_2()
+    run_section_3()
+    run_section_4()
 
-    
+if __name__ == "__main__":
+    main()
