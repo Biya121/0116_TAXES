@@ -239,13 +239,19 @@ PRODUCTS = {
         "detail_image": "scrubber_detail1.png",
         "detail_image": "scrubber_detail2.png",
         "detail_image": "scrubber_detail3.png",
+        "detail_image": "scrubber_detail4.png",
+        "detail_image": "scrubber_detail5.png"
     },
     "칫솔": {
         "category": "생활잡화",
         "title": "대나무 칫솔",
         "desc": "지속 가능한 욕실을 위한 친환경 선택.",
-        "list_image": "toothbrush.jpg",
-        "detail_image": "toothbrush_detail.jpg",
+        "list_image": "toothbrush.png",
+        "detail_image": "toothbrush_detail1.png",
+        "detail_image": "toothbrush_detail2.png",
+        "detail_image": "toothbrush_detail3.png",
+        "detail_image": "toothbrush_detail4.png",
+        "detail_image": "toothbrush_detail5.png"
     },
 }
 
