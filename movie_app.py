@@ -59,6 +59,37 @@ def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
             unsafe_allow_html=True
         )
 
+def square_placeholder(path: str, *, size: int = 500, radius: int = 14):
+    st.markdown(
+        f"""
+        <div style="
+            width:{size}px;
+            height:{size}px;
+            border-radius:{radius}px;
+            border:1px solid rgba(27,48,34,0.12);
+            background: rgba(255,255,255,0.70);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+            margin: 0 auto;
+        ">
+          <div style="
+                color: rgba(15,26,18,0.55);
+                font-weight:200;
+                letter-spacing:0.06rem;
+                line-height:1.6;
+                text-align:center;
+                padding:18px;
+          ">
+            IMAGE PLACEHOLDER<br>
+            <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 def section_title(text: str):
     """Centered title without Streamlit heading anchors."""
     st.markdown(
@@ -86,25 +117,20 @@ def section_title(text: str):
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
 
+# ---- (Collections) HTML-only image to prevent the “white box above image” ----
 def _to_data_uri(path: str) -> str | None:
-    """Local image -> data URI (for HTML <img> rendering)."""
     if not file_exists(path):
         return None
     ext = os.path.splitext(path)[1].lower().replace(".", "")
-    mime = {
-        "png": "image/png",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "webp": "image/webp",
-    }.get(ext, "image/png")
+    mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "webp": "image/webp"}.get(ext, "image/png")
     with open(path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode("utf-8")
     return f"data:{mime};base64,{b64}"
 
 def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 14) -> str:
     """
-    ✅ size_px 기준 정사각(예: 500, 1000)
-    ✅ 한 덩어리 HTML로만 렌더링 (</div> 박스, 흰색 박스 문제 방지)
+    Collections 이미지용: HTML 한 덩어리로만 렌더링(흰색 박스/태그 노출 방지)
+    size_px=1000 요청 반영
     """
     uri = _to_data_uri(path)
     if uri:
@@ -270,16 +296,6 @@ html, body, [class*="css"]{
 
 /* Tabs center */
 .stTabs [data-baseweb="tab-list"]{ justify-content: center; }
-
-/* ✅ Showcase row: 항상 가운데 정렬 */
-.mn-showcase-row{
-  width:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap: 26px;
-  margin: 0 auto;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -352,8 +368,6 @@ if "page" not in st.session_state:
     st.session_state.page = "home"   # "home" or "detail"
 if "selected_product_key" not in st.session_state:
     st.session_state.selected_product_key = None
-
-# ✅ Showcase: 2개씩 페이지
 if "showcase_page" not in st.session_state:
     st.session_state.showcase_page = 0
 
@@ -410,7 +424,6 @@ def render_detail_page(product_key: str):
         st.session_state.selected_product_key = None
         st.rerun()
 
-    # Back to home (Collections)
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
         st.markdown('<div class="back-btn">', unsafe_allow_html=True)
@@ -438,9 +451,7 @@ def render_detail_page(product_key: str):
 
     st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
 
-    # DETAIL IMAGES: show ALL images full-width, no cropping
     detail = p.get("detail_image")
-
     if isinstance(detail, (list, tuple)):
         for i, img_path in enumerate(detail):
             image_or_placeholder(img_path, height=740, radius=14)
@@ -461,12 +472,11 @@ def render_home_page():
     valid_showcase = [p for p in showcase_images if file_exists(p)]
     src = valid_showcase if valid_showcase else showcase_images
 
-    # ✅ 2개씩 페이지
+    # ✅ 2개씩 페이지 (요청 유지)
     per_page = 2
     total_pages = max(1, math.ceil(len(src) / per_page))
     st.session_state.showcase_page = st.session_state.showcase_page % total_pages
 
-    # arrows ABOVE
     spacer_l, nav_c, spacer_r = st.columns([3, 2, 3])
     with nav_c:
         b1, b2, b3 = st.columns([1, 2, 1])
@@ -486,18 +496,31 @@ def render_home_page():
                 st.session_state.showcase_page = (st.session_state.showcase_page + 1) % total_pages
                 st.rerun()
 
-    # ✅ (수정 1) </div> 박스 제거:
-    #    "열고 닫는 HTML을 따로 st.markdown으로 찍지 않고"
-    #    row 전체를 한 번에 렌더링.
+    # ✅ 쇼케이스 이미지가 안 보이던 문제 해결:
+    #    - 쇼케이스만 st.image로 표시 (Streamlit이 파일 경로 렌더링을 가장 안정적으로 처리)
+    #    - 500x500: width=500 + 높이는 원본 비율이지만, 정사각 느낌이 필요하면 이미지 자체를 500x500로 만들어두는 게 가장 확실
     start = st.session_state.showcase_page * per_page
     page_imgs = src[start:start + per_page]
 
-    img_htmls = [html_square_image_or_placeholder(p, size_px=500, radius=14) for p in page_imgs]
-    if len(img_htmls) == 1:
-        row_html = f"<div class='mn-showcase-row'>{img_htmls[0]}</div>"
+    if len(page_imgs) == 1:
+        l, c, r = st.columns([1, 2, 1])
+        with c:
+            if file_exists(page_imgs[0]):
+                st.image(page_imgs[0], width=500)
+            else:
+                square_placeholder(page_imgs[0], size=500, radius=14)
     else:
-        row_html = f"<div class='mn-showcase-row'>{img_htmls[0]}{img_htmls[1]}</div>"
-    st.markdown(row_html, unsafe_allow_html=True)
+        l, c1, c2, r = st.columns([1, 2, 2, 1])
+        with c1:
+            if file_exists(page_imgs[0]):
+                st.image(page_imgs[0], width=500)
+            else:
+                square_placeholder(page_imgs[0], size=500, radius=14)
+        with c2:
+            if file_exists(page_imgs[1]):
+                st.image(page_imgs[1], width=500)
+            else:
+                square_placeholder(page_imgs[1], size=500, radius=14)
 
     # COLLECTIONS
     section_title("COLLECTIONS")
@@ -507,9 +530,8 @@ def render_home_page():
     def product_card(product_key: str):
         p = PRODUCTS[product_key]
 
-        # ✅ (수정 2) 콜렉션 이미지 1000px + 흰색 박스 제거:
-        #    카드(열고 닫기)를 쪼개서 렌더링하지 않고 "카드 전체를 한 덩어리 HTML"로 렌더링.
-        #    (이 방식이면 위에 뜨는 흰색 빈 박스가 생길 수가 없음)
+        # ✅ 콜렉션 이미지 1000px + “이미지 위 흰 박스” 방지:
+        #    카드 전체를 한 덩어리 HTML로 렌더링(열고 닫는 div를 나눠서 찍지 않음)
         card_html = f"""
         <div class="mn-card">
           {html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14)}
@@ -519,13 +541,11 @@ def render_home_page():
         """
         st.markdown(card_html, unsafe_allow_html=True)
 
-        # 버튼은 기존처럼 Streamlit 위젯으로 유지
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
             st.rerun()
 
-    # Tab layouts (2-column grid)
     with tabs[0]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
         c1, c2 = st.columns(2, gap="large")
