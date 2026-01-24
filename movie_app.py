@@ -1,4 +1,6 @@
 import os
+import math
+import base64
 import streamlit as st
 
 # =========================
@@ -16,17 +18,94 @@ try:
 except Exception:
     HAS_AUTOREFRESH = False
 
-
 # =========================
 # UTIL
 # =========================
 def file_exists(path: str) -> bool:
     return bool(path) and os.path.isfile(path)
 
-def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
-    """Show image if exists; otherwise show a clean placeholder (no warning blocks)."""
-    if file_exists(path):
-        st.image(path, use_container_width=True)
+def _img_to_data_uri(path: str) -> str | None:
+    """Return data URI for local image (png/jpg/webp)."""
+    if not file_exists(path):
+        return None
+    ext = os.path.splitext(path)[1].lower().replace(".", "")
+    mime = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "webp": "image/webp",
+    }.get(ext, "image/png")
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("utf-8")
+    return f"data:{mime};base64,{b64}"
+
+def image_box_html(path: str, *, w: int, h: int, radius: int = 14) -> str:
+    """HTML image box (no Streamlit st.image), so it can be truly wrapped by custom divs."""
+    data_uri = _img_to_data_uri(path)
+    if data_uri:
+        return f"""
+        <div style="width:{w}px; max-width:100%; margin:0 auto;">
+          <img src="{data_uri}" style="
+              width:{w}px; height:{h}px;
+              max-width:100%;
+              object-fit:cover;
+              border-radius:{radius}px;
+              display:block;
+              box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+              border:1px solid rgba(27,48,34,0.12);
+          " />
+        </div>
+        """
+    # placeholder
+    return f"""
+    <div style="
+        width:{w}px;
+        height:{h}px;
+        max-width:100%;
+        margin:0 auto;
+        border-radius:{radius}px;
+        border:1px solid rgba(27,48,34,0.12);
+        background: rgba(255,255,255,0.70);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+    ">
+      <div style="
+            color: rgba(15,26,18,0.55);
+            font-weight:200;
+            letter-spacing:0.06rem;
+            line-height:1.6;
+            text-align:center;
+            padding:18px;
+      ">
+        IMAGE PLACEHOLDER<br>
+        <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
+      </div>
+    </div>
+    """
+
+def wide_image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
+    """Full-width image box for detail pages."""
+    data_uri = _img_to_data_uri(path)
+    if data_uri:
+        st.markdown(
+            f"""
+            <div style="width:100%; margin:0 auto;">
+              <img src="{data_uri}" style="
+                  width:100%;
+                  height:{height}px;
+                  object-fit:contain;
+                  border-radius:{radius}px;
+                  display:block;
+                  background: rgba(255,255,255,0.50);
+                  border:1px solid rgba(27,48,34,0.12);
+                  box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+              " />
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         st.markdown(
             f"""
@@ -54,7 +133,7 @@ def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
               </div>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
 def section_title(text: str):
@@ -77,22 +156,12 @@ def section_title(text: str):
           margin: 16px auto 34px;
           opacity:0.95;
         }
-
-        /* ✅ remove white blocks above images in collections */
-        div[data-testid="stImage"]{
-          margin-top: 0 !important;
-        }
-        .mn-card .stImage{
-          padding-top: 0 !important;
-          margin-top: 0 !important;
-        }
         </style>
         """,
         unsafe_allow_html=True
     )
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
-
 
 # =========================
 # GLOBAL STYLE
@@ -162,7 +231,7 @@ html, body, [class*="css"]{
   color: rgba(255,255,255,0.82); font-weight: 200; line-height: 1.9;
 }
 
-/* Product card (no badge, no extra blank blocks) */
+/* Product card (REAL wrapper: HTML only) */
 .mn-card{
   background: rgba(255,255,255,0.75);
   border: 1px solid rgba(27,48,34,0.12);
@@ -176,13 +245,15 @@ html, body, [class*="css"]{
   font-weight: 200;
   font-size: 1.28rem;
   letter-spacing: 0.05rem;
+  text-align:left;
 }
 .mn-card-desc{
-  margin: 0 0 14px;
+  margin: 0 0 2px;
   color: rgba(15,26,18,0.62);
   line-height: 1.85;
   font-weight: 200;
   font-size: 0.95rem;
+  text-align:left;
 }
 
 /* Back button styling */
@@ -205,29 +276,16 @@ html, body, [class*="css"]{
 /* Tabs center */
 .stTabs [data-baseweb="tab-list"]{ justify-content: center; }
 
-/* ✅ brand showcase 500x500 frame, show full image without cropping */
-.mn-showcase-frame{
-  width: 500px;
-  height: 500px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(27,48,34,0.12);
-  background: rgba(255,255,255,0.70);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+/* Showcase center wrapper */
+.mn-showcase-wrap{
   display:flex;
-  align-items:center;
   justify-content:center;
-  margin: 0 auto;
-}
-.mn-showcase-frame img{
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display:block;
+  align-items:center;
+  gap: 22px;
+  width:100%;
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 # =========================
 # DATA (Products)
@@ -289,7 +347,6 @@ PRODUCTS = {
     },
 }
 
-
 # =========================
 # STATE (Simple routing)
 # =========================
@@ -297,9 +354,10 @@ if "page" not in st.session_state:
     st.session_state.page = "home"   # "home" or "detail"
 if "selected_product_key" not in st.session_state:
     st.session_state.selected_product_key = None
-if "showcase_i" not in st.session_state:
-    st.session_state.showcase_i = 0
 
+# Showcase paging (2 images per page)
+if "showcase_page" not in st.session_state:
+    st.session_state.showcase_page = 0
 
 # =========================
 # UI: HEADER
@@ -312,12 +370,12 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
 # =========================
 # UI: HERO
 # =========================
 hero_bg = "hero_bg.jpg"
 if file_exists(hero_bg):
+    # (hero 이미지는 원래처럼 st.image 사용)
     st.image(hero_bg, use_container_width=True)
     st.markdown(
         "<div style='text-align:center; margin-top:-360px; position:relative; z-index:2;'>"
@@ -342,7 +400,6 @@ else:
 
 st.divider()
 
-
 # =========================
 # PAGE: DETAIL
 # =========================
@@ -353,7 +410,7 @@ def render_detail_page(product_key: str):
         st.session_state.selected_product_key = None
         st.rerun()
 
-    # ✅ Back to home (Collections)
+    # Back to home (Collections)
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
         st.markdown('<div class="back-btn">', unsafe_allow_html=True)
@@ -381,16 +438,16 @@ def render_detail_page(product_key: str):
 
     st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
 
-    # ✅ show ALL detail images without cropping
+    # DETAIL IMAGES: show ALL images full-width, no cropping
     detail = p.get("detail_image")
+
     if isinstance(detail, (list, tuple)):
         for i, img_path in enumerate(detail):
-            image_or_placeholder(img_path, height=740, radius=14)
+            wide_image_or_placeholder(img_path, height=740, radius=14)
             if i != len(detail) - 1:
                 st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
     else:
-        image_or_placeholder(str(detail), height=740, radius=14)
-
+        wide_image_or_placeholder(str(detail), height=740, radius=14)
 
 # =========================
 # PAGE: HOME (Showcase + Collections)
@@ -401,69 +458,58 @@ def render_home_page():
 
     showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
     valid_showcase = [p for p in showcase_images if file_exists(p)]
+    all_showcase = valid_showcase if valid_showcase else showcase_images  # placeholder도 페이징되도록
 
-    # ✅ Manual rotation + 2 images per page (500x500 each, full image visible)
-    if valid_showcase:
-        total = len(valid_showcase)
-        st.session_state.showcase_i = st.session_state.showcase_i % total
+    # 2 images per page
+    per_page = 2
+    total_pages = max(1, math.ceil(len(all_showcase) / per_page))
+    st.session_state.showcase_page = st.session_state.showcase_page % total_pages
 
-        # arrows (horizontal)
-        spacer_l, nav_c, spacer_r = st.columns([3, 2, 3])
-        with nav_c:
-            b1, b2, b3 = st.columns([1, 2, 1])
-            with b1:
-                if st.button("◀", key="showcase_prev", use_container_width=True):
-                    st.session_state.showcase_i = (st.session_state.showcase_i - 2) % total
-                    st.rerun()
-            with b2:
-                # page indicator (2-up)
-                page_now = (st.session_state.showcase_i // 2) + 1
-                page_total = (total + 1) // 2
-                st.markdown(
-                    f"<div style='text-align:center; color:rgba(15,26,18,0.55); font-weight:200; letter-spacing:0.10rem;'>"
-                    f"{page_now} / {page_total}"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
-            with b3:
-                if st.button("▶", key="showcase_next", use_container_width=True):
-                    st.session_state.showcase_i = (st.session_state.showcase_i + 2) % total
-                    st.rerun()
+    # --- arrows ABOVE the images (horizontal) ---
+    spacer_l, nav_c, spacer_r = st.columns([3, 2, 3])
+    with nav_c:
+        b1, b2, b3 = st.columns([1, 2, 1])
+        with b1:
+            if st.button("◀", key="showcase_prev", use_container_width=True):
+                st.session_state.showcase_page = (st.session_state.showcase_page - 1) % total_pages
+                st.rerun()
+        with b2:
+            st.markdown(
+                f"<div style='text-align:center; color:rgba(15,26,18,0.55); font-weight:200; letter-spacing:0.10rem;'>"
+                f"{st.session_state.showcase_page + 1} / {total_pages}"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+        with b3:
+            if st.button("▶", key="showcase_next", use_container_width=True):
+                st.session_state.showcase_page = (st.session_state.showcase_page + 1) % total_pages
+                st.rerun()
 
-        # 2 images grid
-        i1 = st.session_state.showcase_i
-        i2 = (st.session_state.showcase_i + 1) % total
+    # ✅ Showcase: 500 x 500, 2 images per page, ALWAYS centered
+    start = st.session_state.showcase_page * per_page
+    end = start + per_page
+    page_imgs = all_showcase[start:end]
 
-        c1, c2 = st.columns(2, gap="large")
-
-        def showcase_box(img_path: str):
-            if file_exists(img_path):
-                st.markdown("<div class='mn-showcase-frame'>", unsafe_allow_html=True)
-                st.markdown(f"<img src='data:image/png;base64,{''}' />", unsafe_allow_html=True)
-
-        with c1:
-            if file_exists(valid_showcase[i1]):
-                st.markdown("<div class='mn-showcase-frame'>", unsafe_allow_html=True)
-                st.image(valid_showcase[i1], use_container_width=False, width=500)
-                st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                image_or_placeholder(valid_showcase[i1], height=500, radius=14)
-
-        with c2:
-            if file_exists(valid_showcase[i2]):
-                st.markdown("<div class='mn-showcase-frame'>", unsafe_allow_html=True)
-                st.image(valid_showcase[i2], use_container_width=False, width=500)
-                st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                image_or_placeholder(valid_showcase[i2], height=500, radius=14)
-
+    boxes = [image_box_html(p, w=500, h=500, radius=14) for p in page_imgs]
+    if len(boxes) == 1:
+        st.markdown(
+            f"""
+            <div class="mn-showcase-wrap">
+              {boxes[0]}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
-        # fallback: show 2 placeholders 500x500
-        c1, c2 = st.columns(2, gap="large")
-        with c1:
-            image_or_placeholder("img1.jpg", height=500, radius=14)
-        with c2:
-            image_or_placeholder("img2.jpg", height=500, radius=14)
+        st.markdown(
+            f"""
+            <div class="mn-showcase-wrap">
+              {boxes[0]}
+              {boxes[1]}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     # COLLECTIONS
     section_title("COLLECTIONS")
@@ -471,47 +517,59 @@ def render_home_page():
     tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
 
     def product_card(product_key: str):
+        """
+        ✅ 수정 포인트 (요청사항 1):
+        기존에는 <div class='mn-card'>를 열어두고 st.image/st.button 같은 Streamlit 위젯을 넣어서
+        '카드 div가 비어있는 흰색 칸'이 위에 떠 보였음.
+        -> 카드(이미지+텍스트)는 HTML로 한 번에 렌더링해서 "흰색 빈칸" 자체가 생기지 않게 처리.
+        """
         p = PRODUCTS[product_key]
-        st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
 
-        # ✅ remove any top white block space above image: keep image first with no extra padding
-        image_or_placeholder(p["list_image"], height=360, radius=14)
+        card_html = f"""
+        <div class="mn-card">
+          {image_box_html(p["list_image"], w=500, h=360, radius=14)}
+          <div class="mn-card-title">{p["title"]}</div>
+          <div class="mn-card-desc">{p["desc"]}</div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
 
-        st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
-
-        # ✅ Navigate to detail page
+        # button (outside card)
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
             st.rerun()
-
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # Tab layouts (2-column grid)
     with tabs[0]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
         c1, c2 = st.columns(2, gap="large")
         if len(keys) > 0:
-            with c1: product_card(keys[0])
+            with c1:
+                product_card(keys[0])
         if len(keys) > 1:
-            with c2: product_card(keys[1])
+            with c2:
+                product_card(keys[1])
 
     with tabs[1]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "건강식품"]
         c1, c2 = st.columns(2, gap="large")
         if len(keys) > 0:
-            with c1: product_card(keys[0])
+            with c1:
+                product_card(keys[0])
         if len(keys) > 1:
-            with c2: product_card(keys[1])
+            with c2:
+                product_card(keys[1])
 
     with tabs[2]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "생활잡화"]
         c1, c2 = st.columns(2, gap="large")
         if len(keys) > 0:
-            with c1: product_card(keys[0])
+            with c1:
+                product_card(keys[0])
         if len(keys) > 1:
-            with c2: product_card(keys[1])
+            with c2:
+                product_card(keys[1])
 
     # FOOTER
     st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
@@ -546,7 +604,6 @@ def render_home_page():
     st.caption("Instagram. @madeinnature_official")
     st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  PREMIUM NATURALISM & LUXURY DESIGN.")
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 # =========================
 # ROUTER
