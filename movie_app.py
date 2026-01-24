@@ -1,167 +1,180 @@
 import streamlit as st
 
 # 1. 페이지 설정
-st.set_page_config(
-    page_title="made in nature | Premium Naturalism",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="made in nature | Premium Naturalism", layout="wide")
 
-# 2. 상세 컬러 팔레트 및 디자인 (CSS)
-st.markdown(f"""
+# 2. 상세 컬러 가이드 및 CSS 적용
+# 주색상: #32CD32(라임), #90EE90(라이트), #228B22(그린), #1A3021(다크)
+# 포인트: #D4AF37(골드) / 글씨: #000000(블랙), #D3D3D3(라이트그레이)
+st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;700&display=swap');
-
-    /* 컬러 정의 */
-    :root {{
-        --dark-green: #1A3021;
-        --green: #2D5A27;
-        --light-green: #9DC08B;
-        --lime-green: #EDF1D6;
-        --gold: #D4AF37;
-        --black: #000000;
-        --light-gray: #D3D3D3;
-        --white: #FFFFFF;
-    }}
-
-    html, body, [class*="css"] {{
-        font-family: 'Noto Serif KR', serif;
-        color: var(--black);
-    }}
-
-    /* 상단 중앙 정렬 헤더 */
-    .header-container {{
-        text-align: center;
-        padding: 50px 0 20px 0;
-    }}
-    .brand-name {{
-        font-size: 55px;
-        letter-spacing: 10px;
-        font-weight: 300;
-        color: var(--dark-green);
-        margin-bottom: 5px;
-    }}
-    .brand-sub {{
-        color: var(--gold);
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;700&family=Montserrat:wght@300;500&display=swap');
+    
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Noto Serif KR', serif; color: #000000; }
+    
+    /* 중앙 정렬 헤더 & 로고 */
+    .header-container { text-align: center; padding: 50px 0 20px 0; }
+    .brand-logo { font-family: 'Montserrat', sans-serif; font-size: 48px; letter-spacing: 10px; color: #1A3021; margin-bottom: 5px; }
+    .brand-sub { font-size: 13px; letter-spacing: 4px; color: #D4AF37; font-weight: 300; }
+    
+    /* 중앙 정렬 내비게이션 바 */
+    .nav-container {
+        display: flex;
+        justify-content: center;
+        gap: 35px;
+        border-top: 1px solid #D3D3D3;
+        border-bottom: 1px solid #D3D3D3;
+        padding: 15px 0;
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 1000;
+    }
+    .nav-item {
+        text-decoration: none;
+        color: #000000;
         font-size: 14px;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-    }}
-
-    /* 제품 카드 스타일 */
-    .product-card {{
-        border: 1px solid #f0f0f0;
-        padding: 15px;
-        text-align: center;
-        background-color: var(--white);
+        font-weight: 500;
         transition: 0.3s;
-        margin-bottom: 20px;
-    }}
-    .product-card:hover {{
-        border: 1px solid var(--light-green);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    }}
-    .category-label {{
-        color: var(--light-gray);
-        font-size: 11px;
-        margin-bottom: 5px;
-    }}
+    }
+    .nav-item:hover { color: #228B22; }
+
+    /* 제품 섹션 스타일 */
+    .section-box { padding: 100px 10% 60px 10%; border-bottom: 1px solid #f0f0f0; }
+    .product-tag { color: #D4AF37; font-size: 12px; letter-spacing: 2px; }
+    .product-title { font-size: 36px; color: #1A3021; margin: 10px 0; }
+    .product-desc { color: #555; line-height: 1.8; font-size: 17px; }
+    
+    /* 버튼 커스텀 */
+    .stButton>button {
+        border: 1px solid #1A3021;
+        background-color: transparent;
+        color: #1A3021;
+        border-radius: 0;
+        padding: 10px 40px;
+        transition: 0.4s;
+    }
+    .stButton>button:hover {
+        background-color: #1A3021;
+        color: white;
+        border-color: #1A3021;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. 상단 헤더 & 브랜드 아이덴티티
+# 3. 상단 헤더 및 중앙 정렬 로고
 st.markdown("""
     <div class="header-container">
-        <p class="brand-sub">Premium Naturalism</p>
-        <h1 class="brand-name">made in nature</h1>
+        <p class="brand-sub">PREMIUM NATURALISM</p>
+        <h1 class="brand-logo">MADE IN NATURE</h1>
     </div>
     """, unsafe_allow_html=True)
 
-# 4. Interactive 상단 바 (중앙 정렬 메뉴)
-# 클릭 시 해당 섹션으로 이동하도록 세션 상태 활용
-menu = ["HOME", "화장품&화장소품", "건강식품", "생활잡화"]
-cols = st.columns([2, 1, 1.2, 1, 1, 2]) # 중앙 정렬을 위한 비율 조정
+# 4. Interactive Navigation Bar (중앙 정렬 및 앵커 이동)
+st.markdown("""
+    <div class="nav-container">
+        <a class="nav-item" href="#home">HOME</a>
+        <a class="nav-item" href="#dishcloth">SWEDISH CLOTH</a>
+        <a class="nav-item" href="#toothbrush">BAMBOO BRUSH</a>
+        <a class="nav-item" href="#beeswax">BEESWAX WRAP</a>
+        <a class="nav-item" href="#coconut">COCONUT PADS</a>
+    </div>
+    """, unsafe_allow_html=True)
 
-if 'target' not in st.session_state:
-    st.session_state.target = "HOME"
+# --- 5. 제품 섹션 정의 ---
 
-with cols[1]:
-    if st.button("HOME", use_container_width=True): st.session_state.target = "HOME"
-with cols[2]:
-    if st.button("COSMETIC", use_container_width=True): st.session_state.target = "COSMETIC"
-with cols[3]:
-    if st.button("HEALTH", use_container_width=True): st.session_state.target = "HEALTH"
-with cols[4]:
-    if st.button("LIVING", use_container_width=True): st.session_state.target = "LIVING"
+# [HOME]
+st.markdown('<div id="home"></div>', unsafe_allow_html=True)
+st.image("https://images.unsplash.com/photo-1542601906990-b4d3fb773b09?auto=format&fit=crop&w=1600&q=80")
+st.markdown("""
+    <div style="text-align: center; padding: 60px 0;">
+        <h2 style="color: #1A3021; font-weight: 300;">Nature's Honest Value</h2>
+        <p style="color: #D3D3D3;">자연에서 온 정직한 가치로 당신의 일상을 채웁니다.</p>
+    </div>
+""", unsafe_allow_html=True)
 
-st.divider()
+# [스웨덴 행주]
+st.markdown('<div id="dishcloth" class="section-box">', unsafe_allow_html=True)
+col1, col2 = st.columns([1.2, 1])
+with col1:
+    st.image("https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80")
+with col2:
+    st.markdown("""
+        <p class="product-tag">ZERO WASTE KITCHEN</p>
+        <h2 class="product-title">스웨덴 행주 블랙 에디션</h2>
+        <p class="product-desc">
+            1949년 전통의 북유럽 기술력으로 탄생한 혁신적인 원단.<br>
+            자기 무게의 15배를 흡수하며 일반 면 행주보다 4배 빠르게 건조됩니다.<br>
+            <b>미세플라스틱 없는 깨끗한 주방의 시작.</b>
+        </p>
+    """, unsafe_allow_html=True)
+    st.button("EXPLORE COLLECTION", key="btn1")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# 5. 제품 데이터 정의
-products = {
-    "COSMETIC": [
-        ("기름종이", "천연 마 소재의 흡수력"), ("화장솜 & 케이스", "무표백 순면 화장솜"),
-        ("페이스스타 패치", "감각적인 여드름 케어"), ("LHM 두피마사지기", "4종 타입 맞춤형 케어")
-    ],
-    "HEALTH": [
-        ("도파민 패치", "집중력이 필요한 순간"), ("NAD+ 패치", "활력 에너지를 위한 선택"),
-        ("나이트 패치", "편안한 휴식을 위한 패치")
-    ],
-    "LIVING": [
-        ("노스크래치 수세미", "그릇 손상 없는 세척"), ("코코넛 수세미", "친환경 생분해 소재"),
-        ("금강사 수세미", "강력한 찌든 때 제거"), ("철수세미 세트", "본품 1+리필 5 구성"),
-        ("스웨덴 행주", "압도적 흡수와 건조"), ("비즈왁스랩", "씻어서 다시 쓰는 랩"),
-        ("대나무 칫솔", "탄소 중립 실천의 시작"), ("슈즈커버 필름", "신발을 깨끗하게 보호"),
-        ("UV+ 우산 시리즈", "카멜리아/브리티쉬 라인업")
-    ]
-}
+# [대나무 칫솔]
+st.markdown('<div id="toothbrush" class="section-box">', unsafe_allow_html=True)
+col1, col2 = st.columns([1, 1.2])
+with col1:
+    st.markdown("""
+        <p class="product-tag">SUSTAINABLE ORAL CARE</p>
+        <h2 class="product-title">대나무 칫솔 10색 에디션</h2>
+        <p class="product-desc">
+            천연 밀랍 코팅으로 곰팡이 걱정 없이 위생적으로 사용하세요.<br>
+            PBT 이중 미세모가 잇몸 자극은 줄이고 세정력은 높였습니다.<br>
+            <b>10가지 자연의 색상으로 가족 모두의 건강을 선물하세요.</b>
+        </p>
+    """, unsafe_allow_html=True)
+    st.button("EXPLORE COLLECTION", key="btn2")
+with col2:
+    st.image("https://images.unsplash.com/photo-1600091106710-fb9831f6217c?auto=format&fit=crop&w=800&q=80")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# 6. 섹션별 렌더링
-if st.session_state.target == "HOME":
-    st.image("https://images.unsplash.com/photo-1542601906990-b4d3fb773b09?auto=format&fit=crop&w=1600&q=80", use_container_width=True)
-    st.markdown("<h2 style='text-align:center; color:#1A3021;'>자연에서 온 정직한 가치</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:#888;'>불필요한 화학 성분을 걷어내고 자연 본연의 생명력을 전달합니다.</p>", unsafe_allow_html=True)
+# [비즈왁스랩]
+st.markdown('<div id="beeswax" class="section-box">', unsafe_allow_html=True)
+col1, col2 = st.columns([1.2, 1])
+with col1:
+    st.image("https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=800&q=80")
+with col2:
+    st.markdown("""
+        <p class="product-tag">NATURAL FOOD STORAGE</p>
+        <h2 class="product-title">프리미엄 비즈왁스랩</h2>
+        <p class="product-desc">
+            유기농 면과 천연 밀랍, 호호바 오일로 빚어낸 친환경 랩.<br>
+            식재료의 수분 보존력은 높이고 일회용 비닐 사용은 줄여줍니다.<br>
+            <b>씻어서 다시 쓰는 지속 가능한 신선함.</b>
+        </p>
+    """, unsafe_allow_html=True)
+    st.button("EXPLORE COLLECTION", key="btn3")
+st.markdown('</div>', unsafe_allow_html=True)
 
-elif st.session_state.target == "COSMETIC":
-    st.markdown(f"<h2 style='text-align:center; color:#D4AF37;'>화장품 & 화장소품</h2>", unsafe_allow_html=True)
-    cols = st.columns(4)
-    for i, (name, desc) in enumerate(products["COSMETIC"]):
-        with cols[i % 4]:
-            st.markdown(f"""<div class='product-card'>
-                <div class='category-label'>COSMETIC</div>
-                <h4>{name}</h4>
-                <p style='font-size:12px; color:#666;'>{desc}</p>
-            </div>""", unsafe_allow_html=True)
-            st.button("상세보기", key=f"cos_{i}")
+# [코코넛 수세미]
+st.markdown('<div id="coconut" class="section-box">', unsafe_allow_html=True)
+col1, col2 = st.columns([1, 1.2])
+with col1:
+    st.markdown("""
+        <p class="product-tag">PLANT-BASED CLEANING</p>
+        <h2 class="product-title">생분해 코코넛 수세미</h2>
+        <p class="product-desc">
+            천연 코코넛 섬유로 스크래치 걱정 없는 완벽한 설거지.<br>
+            미세 플라스틱 걱정 없이 자연으로 100% 돌아갑니다.<br>
+            <b>환경과 그릇 모두를 생각하는 건강한 습관.</b>
+        </p>
+    """, unsafe_allow_html=True)
+    st.button("EXPLORE COLLECTION", key="btn4")
+with col2:
+    st.image("https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=800&q=80")
+st.markdown('</div>', unsafe_allow_html=True)
 
-elif st.session_state.target == "HEALTH":
-    st.markdown(f"<h2 style='text-align:center; color:#2D5A27;'>건강식품 (헬스케어)</h2>", unsafe_allow_html=True)
-    cols = st.columns(3)
-    for i, (name, desc) in enumerate(products["HEALTH"]):
-        with cols[i % 3]:
-            st.markdown(f"""<div class='product-card' style='background-color:#EDF1D6;'>
-                <div class='category-label'>HEALTH CARE</div>
-                <h4>{name}</h4>
-                <p style='font-size:12px; color:#666;'>{desc}</p>
-            </div>""", unsafe_allow_html=True)
-            st.button("주문하기", key=f"health_{i}")
-
-elif st.session_state.target == "LIVING":
-    st.markdown(f"<h2 style='text-align:center; color:#1A3021;'>생활잡화 (제로웨이스트)</h2>", unsafe_allow_html=True)
-    cols = st.columns(3)
-    for i, (name, desc) in enumerate(products["LIVING"]):
-        with cols[i % 3]:
-            st.markdown(f"""<div class='product-card'>
-                <div class='category-label'>LIVING & LIFE</div>
-                <h4>{name}</h4>
-                <p style='font-size:12px; color:#666;'>{desc}</p>
-            </div>""", unsafe_allow_html=True)
-            st.button("장바구니", key=f"living_{i}")
-
-# 7. 하단 정보
-st.markdown("<br><br>", unsafe_allow_html=True)
-st.divider()
-f_col1, f_col2 = st.columns([1, 1])
-with f_col1:
-    st.markdown("<p style='color: #D3D3D3;'>© 2026 made in nature. All rights reserved.</p>", unsafe_allow_html=True)
-with f_col2:
-    st.markdown("<p style='text-align: right; color: #D4AF37;'>Instagram | Naver Store | Kakao Talk</p>", unsafe_allow_html=True)
+# 6. 푸터 (이미지 4 스타일 재현)
+st.markdown("""
+    <div style="background-color: white; padding: 100px 20px; text-align: center; border-top: 1px solid #D3D3D3;">
+        <p style="color: #D4AF37; letter-spacing: 5px; font-size: 14px;">SINCE 2025</p>
+        <h2 style="font-family: 'Montserrat'; letter-spacing: 8px; font-weight: 300; color: #1A3021;">MADE IN NATURE</h2>
+        <div style="width: 40px; height: 1px; background-color: #D4AF37; margin: 20px auto;"></div>
+        <p style="color: #D3D3D3; font-size: 12px; margin-top: 20px;">
+            서울특별시 그린구 에코로 123 | MADE IN NATURE 공식 스토어<br>
+            COPYRIGHT © MADE IN NATURE. ALL RIGHTS RESERVED.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
