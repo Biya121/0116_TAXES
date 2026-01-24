@@ -353,11 +353,34 @@ def render_home_page():
     showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
     valid_showcase = [p for p in showcase_images if file_exists(p)]
 
+    # ✅ Manual rotation (replace auto-rotation)
     if valid_showcase:
-        if HAS_AUTOREFRESH:
-            st_autorefresh(interval=3200, key="showcase_refresh")
-            st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
+        total = len(valid_showcase)
+        if total > 0:
+            st.session_state.showcase_i = st.session_state.showcase_i % total
+
+        # --- arrows ABOVE the image (horizontal) ---
+        spacer_l, nav_c, spacer_r = st.columns([3, 2, 3])
+        with nav_c:
+            b1, b2, b3 = st.columns([1, 2, 1])
+            with b1:
+                if st.button("◀", key="showcase_prev", use_container_width=True):
+                    st.session_state.showcase_i = (st.session_state.showcase_i - 1) % total
+                    st.rerun()
+            with b2:
+                st.markdown(
+                    f"<div style='text-align:center; color:rgba(15,26,18,0.55); font-weight:200; letter-spacing:0.10rem;'>"
+                    f"{st.session_state.showcase_i + 1} / {total}"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+            with b3:
+                if st.button("▶", key="showcase_next", use_container_width=True):
+                    st.session_state.showcase_i = (st.session_state.showcase_i + 1) % total
+                    st.rerun()
+
         st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
+
     else:
         image_or_placeholder("img1.jpg", height=740, radius=14)
 
@@ -451,6 +474,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
