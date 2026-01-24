@@ -350,7 +350,7 @@ def render_home_page():
     # BRAND SHOWCASE
     section_title("BRAND SHOWCASE")
 
-    showcase_images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg"]
+    showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
     valid_showcase = [p for p in showcase_images if file_exists(p)]
 
     if valid_showcase:
