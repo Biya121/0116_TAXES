@@ -235,8 +235,10 @@ PRODUCTS = {
         "category": "생활잡화",
         "title": "코코넛 수세미",
         "desc": "자연에서 온 거친 섬유의 완벽한 세척력.",
-        "list_image": "scrubber.jpg",
-        "detail_image": "scrubber_detail.jpg",
+        "list_image": "scrubber.png",
+        "detail_image": "scrubber_detail1.png",
+        "detail_image": "scrubber_detail2.png",
+        "detail_image": "scrubber_detail3.png",
     },
     "칫솔": {
         "category": "생활잡화",
