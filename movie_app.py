@@ -1,5 +1,4 @@
 import os
-import time
 import streamlit as st
 
 # =========================
@@ -20,44 +19,45 @@ except Exception:
 # =========================
 # UTIL
 # =========================
-def file_exists(path: str) -> bool:
+def file_exists(path):
     return bool(path) and os.path.isfile(path)
 
-def safe_image(path: str, *, caption: str | None = None, use_container_width: bool = True, width: int | None = None):
+def safe_image(path, caption=None, use_container_width=True, width=None):
     if file_exists(path):
         st.image(path, caption=caption, use_container_width=use_container_width, width=width)
     else:
         st.warning(f"이미지 파일을 찾을 수 없어요: {path}")
 
-def section_title(text: str, *, subline: bool = True):
-    # ✅ Streamlit 헤딩 문법(#, ##)을 쓰지 않음 → 제목 옆 링크(앵커) 아이콘 발생 가능성 자체 차단
+def section_title(text, subline=True):
+    # Streamlit 헤딩(#)을 쓰지 않고 HTML 텍스트로만 출력 → 앵커 아이콘 문제 회피
     st.markdown(
-        f"""
+        """
         <style>
-        .mn-title {{
+        .mn-title {
           text-align:center;
           letter-spacing:0.28rem;
           color:#1B3022;
           font-weight:200;
           margin: 70px 0 8px;
           font-size: 1.25rem;
-        }}
-        .mn-subline {{
+        }
+        .mn-subline {
           width: 34px;
           height: 1px;
           background: #C5A059;
           margin: 14px auto 28px;
           opacity: 0.95;
-        }}
+        }
         </style>
-        <div class="mn-title">{text}</div>
-        {"<div class='mn-subline'></div>" if subline else ""}
         """,
         unsafe_allow_html=True
     )
+    st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
+    if subline:
+        st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
 
 # =========================
-# GLOBAL STYLE (CSS only)
+# GLOBAL STYLE
 # =========================
 st.markdown("""
 <style>
@@ -71,7 +71,6 @@ st.markdown("""
   --line:rgba(27, 48, 34, 0.14);
   --shadow: 0 18px 40px rgba(0,0,0,0.08);
   --shadow-soft: 0 12px 24px rgba(0,0,0,0.06);
-  --radius: 14px;
 }
 
 html, body, [class*="css"]{
@@ -90,7 +89,6 @@ html, body, [class*="css"]{
               linear-gradient(to bottom, var(--paper), #ffffff);
 }
 
-/* Card */
 .mn-card{
   background: rgba(255,255,255,0.75);
   border: 1px solid rgba(27,48,34,0.12);
@@ -125,7 +123,6 @@ html, body, [class*="css"]{
   font-size: 0.95rem;
 }
 
-/* Header */
 .mn-logo-wrap{
   text-align:center;
   padding: 44px 0 22px;
@@ -150,7 +147,6 @@ html, body, [class*="css"]{
   margin: 22px auto 0;
 }
 
-/* Hero */
 .mn-hero{
   height: 450px;
   border-radius: 8px;
@@ -195,7 +191,6 @@ html, body, [class*="css"]{
   line-height: 1.9;
 }
 
-/* Footer (no HTML blocks; just style helpers) */
 .mn-footer{
   margin-top: 120px;
   padding: 34px 0 10px;
@@ -213,16 +208,6 @@ html, body, [class*="css"]{
   font-weight: 200;
   line-height: 1.9;
 }
-.mn-footer-links a{
-  margin: 0 14px;
-  text-decoration: none;
-  color: rgba(27,48,34,0.85);
-  letter-spacing: 0.1rem;
-  font-size: 0.85rem;
-}
-.mn-footer-links a:hover{
-  color: #C5A059;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -234,9 +219,8 @@ if "selected_product" not in st.session_state:
 if "showcase_i" not in st.session_state:
     st.session_state.showcase_i = 0
 
-
 # =========================
-# SECTION 1: HEADER (no fragile <img> HTML)
+# SECTION 1: HEADER
 # =========================
 st.markdown("""
 <div class="mn-logo-wrap">
@@ -246,14 +230,12 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
 # =========================
 # SECTION 2: HERO
 # =========================
 hero_bg = "hero_bg.jpg"
 if file_exists(hero_bg):
-    st.image(hero_bg, use_container_width=True)  # 가장 안정적인 방법: 그냥 이미지로
-    # 오버레이 텍스트는 아래에 분리해서(HTML 배경 url 의존 제거)
+    st.image(hero_bg, use_container_width=True)
     st.markdown(
         "<div style='text-align:center; margin-top:-360px; position:relative; z-index:2;'>"
         "<div class='mn-hero-h2'>Nature, defined by luxury</div>"
@@ -262,9 +244,8 @@ if file_exists(hero_bg):
         "</div>",
         unsafe_allow_html=True
     )
-    st.markdown("<div style='height:260px;'></div>", unsafe_allow_html=True)  # 레이아웃 보정
+    st.markdown("<div style='height:260px;'></div>", unsafe_allow_html=True)
 else:
-    # 배경 이미지가 없으면 HTML hero 박스만 표시
     st.markdown("""
     <div class="mn-hero" style="background: linear-gradient(135deg, rgba(27,48,34,0.95), rgba(27,48,34,0.65));">
       <div class="mn-hero-overlay"></div>
@@ -279,7 +260,7 @@ else:
 st.divider()
 
 # =========================
-# BRAND SHOWCASE (1000x1000) - no HTML/JS carousel
+# BRAND SHOWCASE
 # =========================
 section_title("BRAND SHOWCASE")
 
@@ -289,19 +270,13 @@ valid_showcase = [p for p in showcase_images if file_exists(p)]
 if not valid_showcase:
     st.warning("쇼케이스 이미지를 찾을 수 없어요. img1.jpg ~ img5.jpg 를 프로젝트 폴더에 넣어주세요.")
 else:
-    # ✅ 자동 로테이션: streamlit-autorefresh가 있으면 주기적으로 인덱스 변경
     if HAS_AUTOREFRESH:
-        # 3.2초마다 리런
         st_autorefresh(interval=3200, key="showcase_refresh")
         st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
     else:
-        # 패키지 없으면 앱은 깨지지 않게 정적 표시 + 안내
         st.caption("자동 로테이션을 원하면: `pip install streamlit-autorefresh` 설치 후 다시 실행하세요.")
 
-    # 1000x1000 “크게” 보여주기: 컨테이너 폭에 맞추되 최대 1000px 느낌으로
-    # Streamlit은 픽셀 고정이 어려워서, wide 레이아웃에서 거의 1000px 가까이 나옴
     st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
-
 
 # =========================
 # COLLECTIONS
@@ -310,7 +285,7 @@ section_title("COLLECTIONS")
 
 tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
 
-product_images: Dict[str, str] = {
+product_images = {
     "기름종이": "oil_paper.jpg",
     "스타페이스": "patch.jpg",
     "도파민패치": "dopamine.jpg",
@@ -319,7 +294,7 @@ product_images: Dict[str, str] = {
     "칫솔": "toothbrush.jpg",
 }
 
-def product_card(key: str, badge: str, title: str, desc: str, img_path: str, btn_key: str):
+def product_card(key, badge, title, desc, img_path, btn_key):
     st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
     st.markdown(f"<span class='mn-badge'>{badge}</span>", unsafe_allow_html=True)
     safe_image(img_path, use_container_width=True)
@@ -366,15 +341,13 @@ if st.session_state.selected_product:
     st.divider()
     st.info(f"선택된 제품: **{st.session_state.selected_product}**  ·  (여기에 상세 페이지/외부 링크/멀티페이지 연결을 추가하면 완성됩니다.)")
 
-
 # =========================
-# FOOTER (✅ NO HTML TAGS as content)
+# FOOTER (NO HTML TAG CONTENT)
 # =========================
 st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
 st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
 st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
 
-# ✅ 여기부터는 HTML 태그를 '콘텐츠'로 넣지 않고, Streamlit 텍스트만 사용
 st.markdown(
     "<div class='mn-footer-muted'>"
     "자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>"
@@ -384,25 +357,25 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 링크는 Streamlit 기본 link_button(가능하면) / 아니면 그냥 텍스트로
 st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 
-link_cols = st.columns(4)
-with link_cols[0]:
-    st.link_button("BRAND STORY", "https://example.com")
-with link_cols[1]:
-    st.link_button("COLLECTIONS", "https://example.com")
-with link_cols[2]:
-    st.link_button("SUSTAINABILITY", "https://example.com")
-with link_cols[3]:
-    st.link_button("CONTACT", "https://example.com")
+# link_button이 Streamlit 버전에 없을 수 있어 try/fallback
+cols = st.columns(4)
+labels = ["BRAND STORY", "COLLECTIONS", "SUSTAINABILITY", "CONTACT"]
+urls = ["https://example.com"] * 4
 
-st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+for i, col in enumerate(cols):
+    with col:
+        try:
+            st.link_button(labels[i], urls[i], use_container_width=True)
+        except Exception:
+            st.button(labels[i], use_container_width=True)
 
+st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
 st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
 st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
 st.caption("Instagram. @madeinnature_official")
-st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
 st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  PREMIUM NATURALISM & LUXURY DESIGN.")
 st.markdown("</div>", unsafe_allow_html=True)
+
 
