@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import base64
 
 # =========================
 # PAGE CONFIG
@@ -84,6 +85,83 @@ def section_title(text: str):
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
 
+def _img_to_data_uri(path: str) -> str:
+    """Read local image file and return data URI (base64)."""
+    ext = os.path.splitext(path)[1].lower().replace(".", "")
+    if ext == "jpg":
+        ext = "jpeg"
+    mime = f"image/{ext}" if ext in ["png", "jpeg", "webp"] else "image/png"
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("utf-8")
+    return f"data:{mime};base64,{b64}"
+
+def square_image_500(path: str, *, size: int = 500, radius: int = 14):
+    """
+    500x500 square box.
+    - show full image inside (object-fit: contain)
+    - no top white block/padding
+    - clean placeholder if missing
+    """
+    if file_exists(path):
+        data_uri = _img_to_data_uri(path)
+        st.markdown(
+            f"""
+            <div class="mn-square-wrap" style="
+                width:{size}px;
+                height:{size}px;
+                border-radius:{radius}px;
+                overflow:hidden;
+                border:1px solid rgba(27,48,34,0.12);
+                background: rgba(255,255,255,0.60);
+                box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+                margin:0;
+                padding:0;
+            ">
+              <img src="{data_uri}" style="
+                  width:100%;
+                  height:100%;
+                  object-fit: contain;
+                  display:block;
+                  margin:0;
+                  padding:0;
+                  background: transparent;
+              "/>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            f"""
+            <div style="
+                width:{size}px;
+                height:{size}px;
+                border-radius:{radius}px;
+                border:1px solid rgba(27,48,34,0.12);
+                background: rgba(255,255,255,0.70);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+                margin:0;
+                padding:0;
+            ">
+              <div style="
+                    color: rgba(15,26,18,0.55);
+                    font-weight:200;
+                    letter-spacing:0.06rem;
+                    line-height:1.6;
+                    text-align:center;
+                    padding:18px;
+              ">
+                IMAGE PLACEHOLDER<br>
+                <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
 
 # =========================
 # GLOBAL STYLE
@@ -153,7 +231,7 @@ html, body, [class*="css"]{
   color: rgba(255,255,255,0.82); font-weight: 200; line-height: 1.9;
 }
 
-/* Product card (no badge, no extra blank blocks) */
+/* Product card */
 .mn-card{
   background: rgba(255,255,255,0.75);
   border: 1px solid rgba(27,48,34,0.12);
@@ -161,6 +239,15 @@ html, body, [class*="css"]{
   padding: 18px;
   box-shadow: var(--shadow-soft);
 }
+
+/* ✅ remove top white block: image wrapper inside card has no padding/margin */
+.mn-card-imgwrap{
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0;
+}
+
+/* title/desc */
 .mn-card-title{
   margin: 14px 0 6px;
   color: var(--deep);
@@ -231,10 +318,6 @@ PRODUCTS = {
         "list_image": "night.jpg",
         "detail_image": "night_detail.jpg",
     },
-
-    # ✅ NOTE:
-    # 너가 올린 코드에서는 detail_image 키가 여러 번 반복되어 마지막 것만 남았어.
-    # 아래처럼 리스트로 모아두면 "모든 상세 이미지"를 스크롤로 볼 수 있어.
     "수세미": {
         "category": "생활잡화",
         "title": "코코넛 수세미",
@@ -357,8 +440,6 @@ def render_detail_page(product_key: str):
 
     # ✅ DETAIL IMAGES: show ALL images full-width, no cropping
     detail = p.get("detail_image")
-
-    # allow string or list
     if isinstance(detail, (list, tuple)):
         for i, img_path in enumerate(detail):
             image_or_placeholder(img_path, height=740, radius=14)
@@ -381,10 +462,8 @@ def render_home_page():
     # ✅ Manual rotation (replace auto-rotation)
     if valid_showcase:
         total = len(valid_showcase)
-        if total > 0:
-            st.session_state.showcase_i = st.session_state.showcase_i % total
+        st.session_state.showcase_i = st.session_state.showcase_i % total
 
-        # --- arrows ABOVE the image (horizontal) ---
         spacer_l, nav_c, spacer_r = st.columns([3, 2, 3])
         with nav_c:
             b1, b2, b3 = st.columns([1, 2, 1])
@@ -404,11 +483,9 @@ def render_home_page():
                     st.session_state.showcase_i = (st.session_state.showcase_i + 1) % total
                     st.rerun()
 
-        # ✅ Showcase size half (placeholder도 동일 스펙)
+        # showcase half size
         image_or_placeholder(valid_showcase[st.session_state.showcase_i], height=370, radius=14)
-
     else:
-        # ✅ Placeholder도 절반 높이로
         image_or_placeholder("img1.jpg", height=370, radius=14)
 
     # COLLECTIONS
@@ -420,13 +497,14 @@ def render_home_page():
         p = PRODUCTS[product_key]
         st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
 
-        # ✅ No badge, no extra blank blocks
-        image_or_placeholder(p["list_image"], height=360, radius=14)
+        # ✅ (1) remove top white block + (2) 500x500 square, show full image
+        st.markdown("<div class='mn-card-imgwrap'>", unsafe_allow_html=True)
+        square_image_500(p["list_image"], size=500, radius=14)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
 
-        # ✅ Navigate to detail page
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
