@@ -24,9 +24,7 @@ def file_exists(path: str) -> bool:
     return bool(path) and os.path.isfile(path)
 
 def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
-    """
-    Show image if exists, otherwise show a clean placeholder box (no warning blocks).
-    """
+    """Show image if exists; otherwise show a clean placeholder (no warning blocks)."""
     if file_exists(path):
         st.image(path, use_container_width=True)
     else:
@@ -60,7 +58,7 @@ def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
         )
 
 def section_title(text: str):
-    # Streamlit 헤딩(#) 사용 안 함 → 앵커 아이콘/정렬 이슈 최소화
+    """Centered title without Streamlit heading anchors."""
     st.markdown(
         """
         <style>
@@ -99,7 +97,6 @@ st.markdown("""
   --gold:#C5A059;
   --paper:#FBFAF7;
   --muted:rgba(15, 26, 18, 0.62);
-  --line:rgba(27, 48, 34, 0.14);
   --shadow-soft: 0 12px 24px rgba(0,0,0,0.06);
   --shadow: 0 18px 40px rgba(0,0,0,0.08);
   --radius: 14px;
@@ -156,7 +153,7 @@ html, body, [class*="css"]{
   color: rgba(255,255,255,0.82); font-weight: 200; line-height: 1.9;
 }
 
-/* Product card (빈 블럭/뱃지 제거된 버전) */
+/* Product card (no badge, no extra blank blocks) */
 .mn-card{
   background: rgba(255,255,255,0.75);
   border: 1px solid rgba(27,48,34,0.12);
@@ -179,6 +176,13 @@ html, body, [class*="css"]{
   font-size: 0.95rem;
 }
 
+/* Back button styling */
+.back-btn button{
+  border-radius: 999px !important;
+  font-weight: 200 !important;
+  border: 1px solid rgba(27,48,34,0.20) !important;
+}
+
 /* Footer */
 .mn-footer{
   margin-top: 120px;
@@ -197,8 +201,6 @@ html, body, [class*="css"]{
 
 # =========================
 # DATA (Products)
-# - list_image: 컬렉션 카드 이미지
-# - detail_image: 상세 페이지 이미지
 # =========================
 PRODUCTS = {
     "기름종이": {
@@ -309,20 +311,21 @@ def render_detail_page(product_key: str):
         st.session_state.selected_product_key = None
         st.rerun()
 
-    section_title("PRODUCT DETAIL")
-
-    # Back button
+    # ✅ Back to home (Collections)
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
+        st.markdown('<div class="back-btn">', unsafe_allow_html=True)
         if st.button("← 컬렉션으로 돌아가기", use_container_width=True):
             st.session_state.page = "home"
             st.session_state.selected_product_key = None
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Detail content
+    section_title("PRODUCT DETAIL")
+
     st.markdown(
         f"""
-        <div style="text-align:center; margin-top: 14px;">
+        <div style="text-align:center; margin-top: 8px;">
           <div style="color:#1B3022; font-weight:200; font-size:2.0rem; letter-spacing:0.06rem;">
             {p["title"]}
           </div>
@@ -336,21 +339,8 @@ def render_detail_page(product_key: str):
 
     st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
 
-    # 상세 이미지
+    # Detail image
     image_or_placeholder(p["detail_image"], height=740, radius=14)
-
-    st.markdown("<div style='height:22px;'></div>", unsafe_allow_html=True)
-
-    # (원하면 여기 아래에 상세 설명/성분/사용법 섹션 추가 가능)
-    st.markdown(
-        """
-        <div style="text-align:center; color: rgba(15,26,18,0.55); font-weight:200; line-height:1.9;">
-          상세 이미지 파일명은 각 제품별로 <b>xxx_detail.jpg</b> 형태로 매핑되어 있습니다.<br>
-          실제 파일명을 쓰고 싶으면 PRODUCTS 딕셔너리의 detail_image 경로만 바꾸면 됩니다.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
 
 
 # =========================
@@ -367,7 +357,6 @@ def render_home_page():
         if HAS_AUTOREFRESH:
             st_autorefresh(interval=3200, key="showcase_refresh")
             st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
-        # 자동 로테이션 패키지 없으면 그냥 고정 1장
         st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
     else:
         image_or_placeholder("img1.jpg", height=740, radius=14)
@@ -381,13 +370,13 @@ def render_home_page():
         p = PRODUCTS[product_key]
         st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
 
-        # ✅ (요청 2) 키워드/뱃지 삭제했고, 이미지 위 빈 흰 블럭도 생성하지 않음
+        # ✅ No badge, no extra blank blocks
         image_or_placeholder(p["list_image"], height=360, radius=14)
 
         st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
 
-        # ✅ (요청 3) 버튼 클릭 시 상세 페이지로 "이동"
+        # ✅ Navigate to detail page
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
@@ -395,7 +384,7 @@ def render_home_page():
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # 탭별 제품 배치
+    # Tab layouts (2-column grid)
     with tabs[0]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
         c1, c2 = st.columns(2, gap="large")
@@ -420,7 +409,7 @@ def render_home_page():
         if len(keys) > 1:
             with c2: product_card(keys[1])
 
-    # FOOTER (깔끔하게)
+    # FOOTER
     st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
     st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
     st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
