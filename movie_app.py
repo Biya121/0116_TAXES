@@ -7,6 +7,17 @@ import streamlit as st
 st.set_page_config(page_title="Made in Nature | Official", layout="wide")
 
 # =========================
+# OPTIONAL: auto-refresh support (showcase rotation)
+# pip install streamlit-autorefresh
+# =========================
+try:
+    from streamlit_autorefresh import st_autorefresh  # type: ignore
+    HAS_AUTOREFRESH = True
+except Exception:
+    HAS_AUTOREFRESH = False
+
+
+# =========================
 # UTIL
 # =========================
 def file_exists(path: str) -> bool:
@@ -172,34 +183,6 @@ html, body, [class*="css"]{
   border: 1px solid rgba(27,48,34,0.20) !important;
 }
 
-/* Showcase nav buttons */
-.mn-showcase-wrap{
-  position: relative;
-  max-width: 920px;
-  margin: 0 auto;
-}
-.mn-showcase-nav{
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  display: flex;
-  gap: 8px;
-}
-.mn-showcase-nav button{
-  width: 44px !important;
-  height: 38px !important;
-  border-radius: 999px !important;
-  font-weight: 200 !important;
-  border: 1px solid rgba(255,255,255,0.55) !important;
-  background: rgba(0,0,0,0.28) !important;
-  color: rgba(255,255,255,0.92) !important;
-  backdrop-filter: blur(6px);
-}
-.mn-showcase-nav button:hover{
-  background: rgba(0,0,0,0.38) !important;
-}
-
 /* Footer */
 .mn-footer{
   margin-top: 120px;
@@ -217,59 +200,56 @@ html, body, [class*="css"]{
 
 
 # =========================
-# DATA (Products) - ALL PNG
+# DATA (Products)
 # =========================
 PRODUCTS = {
     "기름종이": {
         "category": "화장품 & 화장소품",
         "title": "프리미엄 기름종이",
         "desc": "피부 유분을 자극 없이 흡수하는 천연 마 소재.",
-        "list_image": "oil_paper.png",
-        "detail_image": "oil_paper_detail.png",
+        "list_image": "oil_paper.jpg",
+        "detail_image": "oil_paper_detail.jpg",
     },
     "스타페이스": {
         "category": "화장품 & 화장소품",
         "title": "스타페이스 여드름패치",
         "desc": "트러블을 빠르고 조용하게 진정시키는 스팟 솔루션.",
-        "list_image": "patch.png",
-        "detail_image": "patch_detail.png",
+        "list_image": "patch.jpg",
+        "detail_image": "patch_detail.jpg",
     },
     "도파민패치": {
         "category": "건강식품",
         "title": "도파민 패치",
         "desc": "일상의 활력을 되찾아주는 에너제틱 솔루션.",
-        "list_image": "dopamine.png",
-        "detail_image": "dopamine_detail.png",
+        "list_image": "dopamine.jpg",
+        "detail_image": "dopamine_detail.jpg",
     },
     "나이트패치": {
         "category": "건강식품",
         "title": "나이트 패치",
         "desc": "고요한 휴식을 선사하는 아로마 릴렉싱.",
-        "list_image": "night.png",
-        "detail_image": "night_detail.png",
+        "list_image": "night.jpg",
+        "detail_image": "night_detail.jpg",
     },
     "수세미": {
         "category": "생활잡화",
         "title": "코코넛 수세미",
         "desc": "자연에서 온 거친 섬유의 완벽한 세척력.",
-        "list_image": "scrubber.png",
-        "detail_image": "scrubber_detail.png",
+        "list_image": "scrubber.jpg",
+        "detail_image": "scrubber_detail.jpg",
     },
     "칫솔": {
         "category": "생활잡화",
         "title": "대나무 칫솔",
         "desc": "지속 가능한 욕실을 위한 친환경 선택.",
-        "list_image": "toothbrush.png",
-        "detail_image": "toothbrush_detail.png",
+        "list_image": "toothbrush.jpg",
+        "detail_image": "toothbrush_detail.jpg",
     },
 }
 
-# Showcase images - ALL PNG
-SHOWCASE_IMAGES = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
-
 
 # =========================
-# STATE (Simple routing + showcase index)
+# STATE (Simple routing)
 # =========================
 if "page" not in st.session_state:
     st.session_state.page = "home"   # "home" or "detail"
@@ -292,9 +272,9 @@ st.markdown("""
 
 
 # =========================
-# UI: HERO (PNG)
+# UI: HERO
 # =========================
-hero_bg = "hero_bg.png"
+hero_bg = "hero_bg.jpg"
 if file_exists(hero_bg):
     st.image(hero_bg, use_container_width=True)
     st.markdown(
@@ -331,7 +311,7 @@ def render_detail_page(product_key: str):
         st.session_state.selected_product_key = None
         st.rerun()
 
-    # Back to home (Collections)
+    # ✅ Back to home (Collections)
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
         st.markdown('<div class="back-btn">', unsafe_allow_html=True)
@@ -359,7 +339,7 @@ def render_detail_page(product_key: str):
 
     st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
 
-    # Detail image (PNG)
+    # Detail image
     image_or_placeholder(p["detail_image"], height=740, radius=14)
 
 
@@ -370,36 +350,16 @@ def render_home_page():
     # BRAND SHOWCASE
     section_title("BRAND SHOWCASE")
 
-    valid_showcase = [p for p in SHOWCASE_IMAGES if file_exists(p)]
+    showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
+    valid_showcase = [p for p in showcase_images if file_exists(p)]
 
     if valid_showcase:
-        # keep index in range (in case file count changes)
-        st.session_state.showcase_i %= len(valid_showcase)
-
-        # Showcase wrapper (for top-right buttons overlay)
-        st.markdown("<div class='mn-showcase-wrap'>", unsafe_allow_html=True)
-
-        # Overlay buttons in top-right
-        st.markdown("<div class='mn-showcase-nav'>", unsafe_allow_html=True)
-        nav_l, nav_r = st.columns([1, 1], gap="small")
-        with nav_l:
-            if st.button("<", key="showcase_prev"):
-                st.session_state.showcase_i = (st.session_state.showcase_i - 1) % len(valid_showcase)
-                st.rerun()
-        with nav_r:
-            if st.button(">", key="showcase_next"):
-                st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
-                st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # Image
+        if HAS_AUTOREFRESH:
+            st_autorefresh(interval=3200, key="showcase_refresh")
+            st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
         st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
-
-        st.markdown("</div>", unsafe_allow_html=True)  # end mn-showcase-wrap
-
     else:
-        # fallback placeholder (PNG)
-        image_or_placeholder("img1.png", height=560, radius=14)
+        image_or_placeholder("img1.jpg", height=740, radius=14)
 
     # COLLECTIONS
     section_title("COLLECTIONS")
@@ -410,13 +370,13 @@ def render_home_page():
         p = PRODUCTS[product_key]
         st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
 
-        # list image (PNG)
-        image_or_placeholder(p["list_image"], height=340, radius=14)
+        # ✅ No badge, no extra blank blocks
+        image_or_placeholder(p["list_image"], height=360, radius=14)
 
         st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
         st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
 
-        # Navigate to detail page
+        # ✅ Navigate to detail page
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
