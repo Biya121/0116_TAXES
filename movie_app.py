@@ -25,66 +25,6 @@ except Exception:
 def file_exists(path: str) -> bool:
     return bool(path) and os.path.isfile(path)
 
-def _to_data_uri(path: str) -> str | None:
-    """Local image -> data URI (for HTML <img> rendering). Keeps layout stable."""
-    if not file_exists(path):
-        return None
-    ext = os.path.splitext(path)[1].lower().replace(".", "")
-    mime = {
-        "png": "image/png",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "webp": "image/webp",
-    }.get(ext, "image/png")
-    with open(path, "rb") as f:
-        b64 = base64.b64encode(f.read()).decode("utf-8")
-    return f"data:{mime};base64,{b64}"
-
-def html_image_or_placeholder(path: str, *, width: int, height: int, radius: int = 14, fit: str = "cover") -> str:
-    """
-    HTML 기반 이미지 렌더러.
-    ✅ (수정사항 1) cards 내부에서 st.image를 쓰면 '빈 흰색 카드칸'이 따로 떠 보이는 경우가 있어
-       카드 내부 이미지만 HTML로 그리게 해서 흰색칸 문제를 제거.
-    """
-    uri = _to_data_uri(path)
-    if uri:
-        return f"""
-        <img src="{uri}" style="
-            width:{width}px;
-            height:{height}px;
-            max-width:100%;
-            object-fit:{fit};
-            border-radius:{radius}px;
-            display:block;
-        "/>
-        """
-    return f"""
-    <div style="
-        width:{width}px;
-        height:{height}px;
-        max-width:100%;
-        border-radius:{radius}px;
-        border:1px solid rgba(27,48,34,0.12);
-        background: rgba(255,255,255,0.70);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        box-shadow: 0 12px 24px rgba(0,0,0,0.05);
-    ">
-      <div style="
-            color: rgba(15,26,18,0.55);
-            font-weight:200;
-            letter-spacing:0.06rem;
-            line-height:1.6;
-            text-align:center;
-            padding:18px;
-      ">
-        IMAGE PLACEHOLDER<br>
-        <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
-      </div>
-    </div>
-    """
-
 def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
     """Show image if exists; otherwise show a clean placeholder (no warning blocks)."""
     if file_exists(path):
@@ -145,6 +85,79 @@ def section_title(text: str):
     )
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
+
+def _to_data_uri(path: str) -> str | None:
+    """Local image -> data URI (for HTML <img> rendering)."""
+    if not file_exists(path):
+        return None
+    ext = os.path.splitext(path)[1].lower().replace(".", "")
+    mime = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "webp": "image/webp",
+    }.get(ext, "image/png")
+    with open(path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("utf-8")
+    return f"data:{mime};base64,{b64}"
+
+def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 14) -> str:
+    """
+    ✅ size_px 기준 정사각(예: 500, 1000)
+    ✅ 한 덩어리 HTML로만 렌더링 (</div> 박스, 흰색 박스 문제 방지)
+    """
+    uri = _to_data_uri(path)
+    if uri:
+        return f"""
+        <div style="width:100%; display:flex; justify-content:center;">
+          <div style="width:100%; max-width:{size_px}px;">
+            <div style="
+              width:100%;
+              aspect-ratio: 1 / 1;
+              border-radius:{radius}px;
+              overflow:hidden;
+              border:1px solid rgba(27,48,34,0.12);
+              box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+              background: rgba(255,255,255,0.55);
+            ">
+              <img src="{uri}" style="
+                width:100%;
+                height:100%;
+                object-fit:cover;
+                display:block;
+              "/>
+            </div>
+          </div>
+        </div>
+        """
+    return f"""
+    <div style="width:100%; display:flex; justify-content:center;">
+      <div style="
+          width:100%;
+          max-width:{size_px}px;
+          aspect-ratio: 1 / 1;
+          border-radius:{radius}px;
+          border:1px solid rgba(27,48,34,0.12);
+          background: rgba(255,255,255,0.70);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+      ">
+        <div style="
+              color: rgba(15,26,18,0.55);
+              font-weight:200;
+              letter-spacing:0.06rem;
+              line-height:1.6;
+              text-align:center;
+              padding:18px;
+        ">
+          IMAGE PLACEHOLDER<br>
+          <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
+        </div>
+      </div>
+    </div>
+    """
 
 
 # =========================
@@ -215,7 +228,7 @@ html, body, [class*="css"]{
   color: rgba(255,255,255,0.82); font-weight: 200; line-height: 1.9;
 }
 
-/* Product card (no badge, no extra blank blocks) */
+/* Product card */
 .mn-card{
   background: rgba(255,255,255,0.75);
   border: 1px solid rgba(27,48,34,0.12);
@@ -258,7 +271,7 @@ html, body, [class*="css"]{
 /* Tabs center */
 .stTabs [data-baseweb="tab-list"]{ justify-content: center; }
 
-/* ✅ Showcase center (요청 2-2: 무조건 가운데 정렬) */
+/* ✅ Showcase row: 항상 가운데 정렬 */
 .mn-showcase-row{
   width:100%;
   display:flex;
@@ -303,9 +316,6 @@ PRODUCTS = {
         "list_image": "night.jpg",
         "detail_image": "night_detail.jpg",
     },
-
-    # ✅ NOTE:
-    # detail_image 키가 여러 번 반복되면 마지막 것만 남으므로 리스트로 유지
     "수세미": {
         "category": "생활잡화",
         "title": "코코넛 수세미",
@@ -343,7 +353,7 @@ if "page" not in st.session_state:
 if "selected_product_key" not in st.session_state:
     st.session_state.selected_product_key = None
 
-# ✅ Showcase: 2개씩 페이지 (요청 2-1)
+# ✅ Showcase: 2개씩 페이지
 if "showcase_page" not in st.session_state:
     st.session_state.showcase_page = 0
 
@@ -448,16 +458,15 @@ def render_home_page():
     section_title("BRAND SHOWCASE")
 
     showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png"]
-    # 파일 존재하는 것만 쓰되, 없으면 placeholder 경로로라도 페이지 구성 유지
     valid_showcase = [p for p in showcase_images if file_exists(p)]
     src = valid_showcase if valid_showcase else showcase_images
 
-    # ✅ 2개씩 페이지 (요청 2-1)
+    # ✅ 2개씩 페이지
     per_page = 2
     total_pages = max(1, math.ceil(len(src) / per_page))
     st.session_state.showcase_page = st.session_state.showcase_page % total_pages
 
-    # ✅ 기존처럼 화살표는 위에 (레이아웃 유지)
+    # arrows ABOVE
     spacer_l, nav_c, spacer_r = st.columns([3, 2, 3])
     with nav_c:
         b1, b2, b3 = st.columns([1, 2, 1])
@@ -477,35 +486,18 @@ def render_home_page():
                 st.session_state.showcase_page = (st.session_state.showcase_page + 1) % total_pages
                 st.rerun()
 
-    # ✅ 500x500 + 무조건 가운데정렬 (요청 2, 2-2)
+    # ✅ (수정 1) </div> 박스 제거:
+    #    "열고 닫는 HTML을 따로 st.markdown으로 찍지 않고"
+    #    row 전체를 한 번에 렌더링.
     start = st.session_state.showcase_page * per_page
     page_imgs = src[start:start + per_page]
 
-    img_htmls = [
-        html_image_or_placeholder(p, width=500, height=500, radius=14, fit="cover")
-        for p in page_imgs
-    ]
-
-    # 가운데 정렬 flex row (1장이어도 가운데)
+    img_htmls = [html_square_image_or_placeholder(p, size_px=500, radius=14) for p in page_imgs]
     if len(img_htmls) == 1:
-        st.markdown(
-            f"""
-            <div class="mn-showcase-row">
-              {img_htmls[0]}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        row_html = f"<div class='mn-showcase-row'>{img_htmls[0]}</div>"
     else:
-        st.markdown(
-            f"""
-            <div class="mn-showcase-row">
-              {img_htmls[0]}
-              {img_htmls[1]}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        row_html = f"<div class='mn-showcase-row'>{img_htmls[0]}{img_htmls[1]}</div>"
+    st.markdown(row_html, unsafe_allow_html=True)
 
     # COLLECTIONS
     section_title("COLLECTIONS")
@@ -515,28 +507,25 @@ def render_home_page():
     def product_card(product_key: str):
         p = PRODUCTS[product_key]
 
-        # ✅ (수정사항 1) 흰색 칸 문제 제거:
-        # mn-card div는 그대로 유지하되, 카드 내부 이미지만 HTML <img>로 렌더링
-        st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
+        # ✅ (수정 2) 콜렉션 이미지 1000px + 흰색 박스 제거:
+        #    카드(열고 닫기)를 쪼개서 렌더링하지 않고 "카드 전체를 한 덩어리 HTML"로 렌더링.
+        #    (이 방식이면 위에 뜨는 흰색 빈 박스가 생길 수가 없음)
+        card_html = f"""
+        <div class="mn-card">
+          {html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14)}
+          <div class="mn-card-title">{p["title"]}</div>
+          <div class="mn-card-desc">{p["desc"]}</div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
 
-        # 카드 안 이미지 (기존 height/ratio 유지)
-        st.markdown(
-            html_image_or_placeholder(p["list_image"], width=500, height=360, radius=14, fit="cover"),
-            unsafe_allow_html=True
-        )
-
-        st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
-
-        # ✅ Navigate to detail page (버튼은 기존처럼)
+        # 버튼은 기존처럼 Streamlit 위젯으로 유지
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
             st.rerun()
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Tab layouts (2-column grid) - 기존 그대로
+    # Tab layouts (2-column grid)
     with tabs[0]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
         c1, c2 = st.columns(2, gap="large")
@@ -561,7 +550,7 @@ def render_home_page():
         if len(keys) > 1:
             with c2: product_card(keys[1])
 
-    # FOOTER (그대로)
+    # FOOTER
     st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
     st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
     st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
@@ -603,6 +592,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
