@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import base64
-import time
 import streamlit.components.v1 as components
 from typing import Optional, List, Dict
 
@@ -51,8 +50,8 @@ set_defaults()
 
 # =========================
 # 2) GLOBAL STYLE
-# - Fix header anchor/link icons
-# - Improve luxury details
+# - Hide Streamlit anchor/link icons near titles
+# - Keep centered luxury tone
 # =========================
 st.markdown("""
 <style>
@@ -85,13 +84,12 @@ html, body, [class*="css"]{
               linear-gradient(to bottom, var(--paper), #ffffff);
 }
 
-/* ✅ Streamlit 헤더에 붙는 링크(앵커) 아이콘 제거 */
+/* ✅ Streamlit 헤더 옆 '링크' 아이콘/앵커 UI 제거 */
 a.anchor-link { display: none !important; }
 [data-testid="stHeaderActionElements"] { display: none !important; }
 .stMarkdown h1 a, .stMarkdown h2 a, .stMarkdown h3 a,
 .stMarkdown h4 a, .stMarkdown h5 a, .stMarkdown h6 a { display:none !important; }
 
-/* Titles */
 .section-title{
   text-align:center;
   letter-spacing:0.35rem;
@@ -320,15 +318,21 @@ a.anchor-link { display: none !important; }
 """, unsafe_allow_html=True)
 
 # =========================
-# 3) AUTO ROTATION CAROUSEL (1000x1000)
+# 3) AUTO ROTATION CAROUSEL (Big 1000x1000)
 # =========================
 def auto_carousel(image_paths: List[str], interval_ms: int = 3200, max_size: int = 1000):
     """
     Large square carousel (target 1000x1000). Auto-rotates without user interaction.
     Uses base64 data URLs so it never breaks due to static file serving.
     """
-    data_urls = [to_data_url(p) for p in image_paths if to_data_url(p)]
-    missing = [p for p in image_paths if not to_data_url(p)]
+    data_urls = []
+    missing = []
+    for p in image_paths:
+        u = to_data_url(p)
+        if u:
+            data_urls.append(u)
+        else:
+            missing.append(p)
 
     if not data_urls:
         st.markdown(
@@ -338,13 +342,7 @@ def auto_carousel(image_paths: List[str], interval_ms: int = 3200, max_size: int
         )
         return
 
-    # Build HTML
-    # - responsive container: max-width 1000px
-    # - aspect-ratio: 1/1 (square)
-    # - fades between slides
-    slides_html = "\n".join(
-        [f"<img class='mn-slide' src='{u}' />" for u in data_urls]
-    )
+    slides_html = "\n".join([f"<img class='mn-slide' src='{u}' alt='showcase' />" for u in data_urls])
 
     html = f"""
     <div class="mn-carousel-wrap">
@@ -414,12 +412,9 @@ def auto_carousel(image_paths: List[str], interval_ms: int = 3200, max_size: int
     </script>
     """
 
-    # height 계산: 최대 1000px 정사각형을 유지하되 화면에 맞춰 유연하게
-    # components.html은 height를 지정해야 잘림이 덜함.
     components.html(html, height=max_size + 40, scrolling=False)
 
     if missing:
-        # 조용히 안내(에러로 터지지 않게)
         st.caption("일부 쇼케이스 이미지가 없어 제외되었습니다: " + ", ".join(missing))
 
 # =========================
@@ -467,7 +462,7 @@ def run_section_2():
 
     st.markdown("<div class='soft-divider'></div>", unsafe_allow_html=True)
 
-    # ✅ 헤더는 HTML로 렌더 → 앵커 아이콘 문제도 없음
+    # ✅ HTML title = no anchor icons
     st.markdown("""
       <h3 style="text-align:center; font-weight:200; color:#1B3022; letter-spacing:0.22rem; margin-top:18px;">
         BRAND SHOWCASE
@@ -475,7 +470,7 @@ def run_section_2():
       <div class="section-subline"></div>
     """, unsafe_allow_html=True)
 
-    # ✅ 1000x1000 큰 이미지 자동 로테이션 캐러셀
+    # ✅ Big 1000x1000 auto-rotating carousel
     showcase_images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg"]
     auto_carousel(showcase_images, interval_ms=3200, max_size=1000)
 
@@ -495,7 +490,7 @@ def product_card(key: str, badge: str, title: str, desc: str, img_path: str, btn
     st.markdown("</div>", unsafe_allow_html=True)
 
 def run_section_3():
-    # ✅ HTML 타이틀로 렌더 → 앵커 아이콘 없음
+    # ✅ HTML title = no anchor icons
     st.markdown("<h2 class='section-title'>COLLECTIONS</h2>", unsafe_allow_html=True)
     st.markdown("<div class='section-subline'></div>", unsafe_allow_html=True)
 
@@ -581,16 +576,14 @@ def run_section_3():
           </div>
           <div class="section-subline" style="margin:14px auto 26px;"></div>
         """, unsafe_allow_html=True)
-
         p = st.session_state.selected_product
         st.info(f"선택된 제품: **{p}**  ·  (여기에 상세 페이지/외부 링크/멀티페이지 연결을 추가하면 완성됩니다.)")
 
 # =========================
-# 7) SECTION 4: FOOTER (✅ 태그 구조 완전 정리)
+# 7) SECTION 4: FOOTER (✅ fully enclosed HTML, no stray characters)
 # =========================
 def run_section_4():
-    # ✅ 사용자가 보여준 footer HTML이 “그대로 출력되는” 문제를 막기 위해
-    # ✅ 여기서는 한 번에 완결된 HTML만 st.markdown(unsafe_allow_html=True)로 렌더
+    # ✅ IMPORTANT: Do not put any stray characters (like 'z') before '<'
     st.markdown("""
       <div class="footer-outer">
         <div class="footer-content">
