@@ -1,172 +1,129 @@
 import streamlit as st
 
-# 1. 페이지 설정
-st.set_page_config(page_title="Premium Eco-Luxury Brand", layout="wide")
+# 1. 페이지 설정 및 디자인 (자연주의 컨셉 컬러 반영)
+st.set_page_config(page_title="made in nature | 브랜드 제품 소개", layout="wide")
 
-# 2. 고도화된 스타일링 (CSS)
-st.markdown("""
+# CSS를 이용한 커스텀 스타일링 (그린, 골드, 화이트 조합)
+st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Noto+Sans+KR:wght@300;500&display=swap');
+    /* 전체 배경 및 폰트 설정 */
+    .main {{
+        background-color: #FFFFFF;
+        color: #000000;
+    }}
     
-    /* 전체 배경 및 기본 폰트 */
-    .main {
-        background-color: #FFFFFF;
-        color: #1A1A1A;
-    }
-    h1, h2, h3 {
-        font-family: 'Playfair Display', serif;
-        color: #1E3932; /* 메인 초록 */
-    }
-    p, div {
-        font-family: 'Noto Sans KR', sans-serif;
-    }
+    /* 상단 네비게이션 바 스타일 */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 50px;
+        justify-content: center;
+    }}
+    .stTabs [data-baseweb="tab"] {{
+        height: 50px;
+        white-space: pre-wrap;
+        font-weight: 600;
+        font-size: 18px;
+        color: #4B5320; /* 다크그린 */
+    }}
+    .stTabs [aria-selected="true"] {{
+        color: #D4AF37 !important; /* 골드 포인트 */
+        border-bottom-color: #D4AF37 !important;
+    }}
 
-    /* 네비게이션바 느낌의 상단 여백 */
-    .nav-spacer {
-        padding: 20px 0;
-        text-align: center;
-        border-bottom: 1px solid #F0F0F0;
-        margin-bottom: 50px;
-    }
-
-    /* 히어로 섹션: 화이트 배경에 그린/골드 포인트 */
-    .hero-box {
-        padding: 100px 50px;
-        background-color: #FFFFFF;
-        border-left: 8px solid #1E3932;
-        margin-bottom: 80px;
-    }
-
-    .gold-accent {
-        color: #C5A059; /* 세련된 샴페인 골드 */
+    /* 제품 카드 스타일 */
+    .product-card {{
+        border: 1px solid #E0E0E0;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: #F9F9F9;
+        margin-bottom: 20px;
+    }}
+    .gold-text {{
+        color: #D4AF37;
         font-weight: bold;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-    }
-
-    /* 제품 카드: 화이트 배경 + 그린 테두리 + 골드 하이라이트 */
-    .product-card-v2 {
-        background-color: #FFFFFF;
-        padding: 40px 30px;
-        border: 1px solid #EAEAEA;
-        border-radius: 0px; /* 미니멀한 직각 디자인 */
-        transition: all 0.4s ease;
-        text-align: center;
-    }
-    
-    .product-card-v2:hover {
-        border: 1px solid #1E3932;
-        box-shadow: 0 20px 40px rgba(30, 57, 50, 0.05);
-    }
-
-    .category-tag {
-        background-color: #1E3932;
-        color: #FFFFFF;
-        padding: 4px 12px;
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        margin-bottom: 15px;
-        display: inline-block;
-    }
-
-    /* 버튼: 블랙 보조색 활용 */
-    div.stButton > button {
-        background-color: #1A1A1A; /* 블랙 보조색 */
-        color: #FFFFFF;
-        border: none;
-        border-radius: 0px;
-        padding: 12px 30px;
-        font-size: 0.8rem;
-        letter-spacing: 1px;
-        transition: all 0.3s;
-    }
-    
-    div.stButton > button:hover {
-        background-color: #C5A059; /* 호버 시 골드 */
-        color: white;
-    }
-
-    /* 하단 섹션 */
-    .footer-section {
-        background-color: #1E3932;
-        color: #FFFFFF;
-        padding: 60px;
-        margin-top: 100px;
-    }
+    }}
+    .green-title {{
+        color: #2E8B57; /* 그린 */
+        font-size: 24px;
+        font-weight: bold;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
-# 3. 상단 네비게이션 로고 (텍스트)
-st.markdown('<div class="nav-spacer"><h2 style="letter-spacing:5px;">HERITAGE</h2></div>', unsafe_allow_html=True)
+# 2. 상단 로고 및 제목 섹션
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    # 로고 이미지가 없다면 텍스트로 대체, 있다면 st.image("logo_path.png") 사용
+    st.markdown("<h1 style='text-align: center; color: #2E8B57;'>🍃 made in nature</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #888888;'>자연에서 온 정직한 가치, 프리미엄 자연주의 라이프스타일</p>", unsafe_allow_html=True)
 
-# 4. 히어로 섹션 (비대칭 레이아웃)
-h_col1, h_col2 = st.columns([1.2, 1])
+# 3. 메뉴 구성 (2단계 레이아웃 참고: 클릭 시 섹션 이동 효과)
+tabs = st.tabs(["HOME", "스웨덴 행주", "대나무 칫솔", "비즈왁스랩", "코코넛 수세미"])
 
-with h_col1:
-    st.markdown("""
-        <div class="hero-box">
-            <p class="gold-accent">ESTABLISHED 2026</p>
-            <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 20px;">
-                Pure Green,<br><span style="color:#C5A059">True Luxury.</span>
-            </h1>
-            <p style="color: #666; font-size: 1.1rem; max-width: 500px; line-height: 1.8;">
-                우리는 자연의 깊은 녹색에서 영감을 얻습니다. 가장 순수한 화이트의 깨끗함과 
-                시대를 초월하는 골드의 가치를 결합하여 당신만의 특별한 일상을 제안합니다.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    st.button("COLLECTION VIEW")
+# --- HOME 섹션 ---
+with tabs[0]:
+    st.image("https://images.unsplash.com/photo-1542601906990-b4d3fb773b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", caption="made in nature: Sustainable Lifestyle")
+    st.markdown("---")
+    st.header("Brand Story")
+    st.write("made in nature는 화장품, 건강식품, 생활잡화를 아우르는 자연주의 브랜드입니다.")
+    st.write("지구와 사람 모두에게 무해한 제로웨이스트 가치를 제안합니다.")
 
-with h_col2:
-    # 세로로 긴 세련된 이미지 배치
-    st.image("https://images.unsplash.com/photo-1581605405669-fcdf81165afa?auto=format&fit=crop&q=80&w=800", 
-             use_container_width=True)
+# --- 스웨덴 행주 섹션 ---
+with tabs[1]:
+    col_img, col_txt = st.columns([1, 1])
+    with col_img:
+        st.image("https://via.placeholder.com/500x500?text=Swedish+Dishcloth", caption="스웨덴 행주 블랙 에디션")
+    with col_txt:
+        st.markdown("<p class='green-title'>스웨덴 행주 (Swedish Dishcloth)</p>", unsafe_allow_html=True)
+        st.markdown("<p class='gold-text'>Since 1949 전통 북유럽 행주</p>", unsafe_allow_html=True)
+        st.write("- **강력한 성능**: 자기 무게 15배 흡수, 일반 행주보다 4배 빠른 건조")
+        st.write("- **친환경성**: 1장으로 키친타올 15롤 대체 가능")
+        st.write("- **디자인**: 블랙 에디션, 네이처, 플라워 라인업")
+        st.button("제품 구매하기", key="btn1")
 
-st.markdown("<br><br><br>", unsafe_allow_html=True)
+# --- 대나무 칫솔 섹션 ---
+with tabs[2]:
+    col_img, col_txt = st.columns([1, 1])
+    with col_img:
+        st.image("https://via.placeholder.com/500x500?text=Bamboo+Toothbrush", caption="10색 대나무 칫솔")
+    with col_txt:
+        st.markdown("<p class='green-title'>대나무 칫솔 (Bamboo Toothbrush)</p>", unsafe_allow_html=True)
+        st.markdown("<p class='gold-text'>지구와 나를 위한 제로웨이스트의 시작</p>", unsafe_allow_html=True)
+        st.write("- **미세모**: PBT 이중 미세모로 부드럽고 탄탄한 세정력")
+        st.write("- **곰팡이 방지**: 밀랍 이중 코팅으로 위생적인 관리 가능")
+        st.write("- **다양성**: 취향에 맞는 10가지 컬러 옵션")
+        st.button("제품 구매하기", key="btn2")
 
-# 5. 제품 섹션 (화이트 & 그린 톤)
-st.markdown("<h2 style='text-align: center; margin-bottom: 50px;'>Featured Products</h2>", unsafe_allow_html=True)
+# --- 비즈왁스랩 섹션 ---
+with tabs[3]:
+    col_img, col_txt = st.columns([1, 1])
+    with col_img:
+        st.image("https://via.placeholder.com/500x500?text=Beeswax+Wrap", caption="프리미엄 비즈왁스랩")
+    with col_txt:
+        st.markdown("<p class='green-title'>비즈왁스랩 (Beeswax Wrap)</p>", unsafe_allow_html=True)
+        st.markdown("<p class='gold-text'>FDA & GOTS 인증 천연 식품 포장재</p>", unsafe_allow_html=True)
+        st.write("- **천연 소재**: 천연 밀랍, 호호바 오일, 유기농 면 사용")
+        st.write("- **신선함**: 뛰어난 밀착력으로 음식 수분 완벽 유지")
+        st.write("- **재사용**: 최대 1년까지 사용 가능한 경제적 선택")
+        st.button("제품 구매하기", key="btn3")
 
-p_col1, p_col2, p_col3 = st.columns(3, gap="medium")
+# --- 코코넛 수세미 섹션 ---
+with tabs[4]:
+    col_img, col_txt = st.columns([1, 1])
+    with col_img:
+        st.image("https://via.placeholder.com/500x500?text=Coconut+Scrubber", caption="생분해 코코넛 수세미")
+    with col_txt:
+        st.markdown("<p class='green-title'>코코넛 수세미 (Coconut Scrubber)</p>", unsafe_allow_html=True)
+        st.markdown("<p class='gold-text'>S자형 인체공학 디자인의 강력한 세척</p>", unsafe_allow_html=True)
+        st.write("- **소재**: 천연 코코넛 섬유와 퇴비화 가능한 셀룰로오스")
+        st.write("- **옵션**: 오리지널, 노스크래치, 헤비듀티 3종 구성")
+        st.write("- **위생**: 소량의 세제로도 풍성한 거품, 빠른 건조")
+        st.button("제품 구매하기", key="btn4")
 
-# 제품 데이터
-products = [
-    {"title": "The First Dew", "cat": "Skin Care", "img": "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=400"},
-    {"title": "Golden Leaf", "cat": "Interior", "img": "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=400"},
-    {"title": "Forest Essence", "cat": "Fragrance", "img": "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?q=80&w=400"}
-]
-
-cols = [p_col1, p_col2, p_col3]
-
-for i, col in enumerate(cols):
-    with col:
-        st.image(products[i]["img"], use_container_width=True)
-        st.markdown(f"""
-            <div class="product-card-v2">
-                <span class="category-tag">{products[i]['cat']}</span>
-                <h3 style="font-size: 1.5rem; margin-bottom: 15px;">{products[i]['title']}</h3>
-                <p style="color: #888; font-size: 0.9rem; margin-bottom: 20px;">
-                    자연 유래 성분과 고귀한 금빛 디테일의 조화.
-                </p>
-                <p class="gold-accent" style="font-size: 1.1rem;">KRW 85,000</p>
-            </div>
-        """, unsafe_allow_html=True)
-        st.button("DETAILS", key=f"details_{i}", use_container_width=True)
-
-# 6. 브랜드 푸터 (딥 그린 & 화이트)
+# 4. 푸터(Footer)
+st.markdown("---")
 st.markdown("""
-    <div class="footer-section">
-        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-            <h2 style="color: #C5A059; margin-bottom: 20px;">Join the Heritage</h2>
-            <p style="opacity: 0.8; line-height: 2;">
-                브랜드의 새로운 소식과 프라이빗 이벤트를 가장 먼저 만나보세요.<br>
-                우리는 지속 가능한 럭셔리를 지향하며, 모든 제품은 자연에 대한 존중을 담아 제작됩니다.
-            </p>
-            <br>
-            <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 40px;">
-                © 2026 HERITAGE GREEN. PRIVACY POLICY | TERMS OF SERVICE
-            </p>
-        </div>
+    <div style='text-align: center; color: #AAAAAA; padding: 20px;'>
+        <p>© 2026 made in nature. All Rights Reserved.</p>
+        <p>화장품 & 화장소품 | 건강식품 | 생활잡화 전문 브랜드</p>
     </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
