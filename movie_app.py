@@ -231,27 +231,35 @@ PRODUCTS = {
         "list_image": "night.jpg",
         "detail_image": "night_detail.jpg",
     },
+
+    # ✅ NOTE:
+    # 너가 올린 코드에서는 detail_image 키가 여러 번 반복되어 마지막 것만 남았어.
+    # 아래처럼 리스트로 모아두면 "모든 상세 이미지"를 스크롤로 볼 수 있어.
     "수세미": {
         "category": "생활잡화",
         "title": "코코넛 수세미",
         "desc": "자연에서 온 거친 섬유의 완벽한 세척력.",
         "list_image": "scrubber.png",
-        "detail_image": "scrubber_detail1.png",
-        "detail_image": "scrubber_detail2.png",
-        "detail_image": "scrubber_detail3.png",
-        "detail_image": "scrubber_detail4.png",
-        "detail_image": "scrubber_detail5.png"
+        "detail_image": [
+            "scrubber_detail1.png",
+            "scrubber_detail2.png",
+            "scrubber_detail3.png",
+            "scrubber_detail4.png",
+            "scrubber_detail5.png",
+        ],
     },
     "칫솔": {
         "category": "생활잡화",
         "title": "대나무 칫솔",
         "desc": "지속 가능한 욕실을 위한 친환경 선택.",
         "list_image": "toothbrush.png",
-        "detail_image": "toothbrush_detail1.png",
-        "detail_image": "toothbrush_detail2.png",
-        "detail_image": "toothbrush_detail3.png",
-        "detail_image": "toothbrush_detail4.png",
-        "detail_image": "toothbrush_detail5.png"
+        "detail_image": [
+            "toothbrush_detail1.png",
+            "toothbrush_detail2.png",
+            "toothbrush_detail3.png",
+            "toothbrush_detail4.png",
+            "toothbrush_detail5.png",
+        ],
     },
 }
 
@@ -347,8 +355,17 @@ def render_detail_page(product_key: str):
 
     st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
 
-    # Detail image
-    image_or_placeholder(p["detail_image"], height=740, radius=14)
+    # ✅ DETAIL IMAGES: show ALL images full-width, no cropping
+    detail = p.get("detail_image")
+
+    # allow string or list
+    if isinstance(detail, (list, tuple)):
+        for i, img_path in enumerate(detail):
+            image_or_placeholder(img_path, height=740, radius=14)
+            if i != len(detail) - 1:
+                st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
+    else:
+        image_or_placeholder(str(detail), height=740, radius=14)
 
 
 # =========================
@@ -387,10 +404,12 @@ def render_home_page():
                     st.session_state.showcase_i = (st.session_state.showcase_i + 1) % total
                     st.rerun()
 
-        st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
+        # ✅ Showcase size half (placeholder도 동일 스펙)
+        image_or_placeholder(valid_showcase[st.session_state.showcase_i], height=370, radius=14)
 
     else:
-        image_or_placeholder("img1.jpg", height=740, radius=14)
+        # ✅ Placeholder도 절반 높이로
+        image_or_placeholder("img1.jpg", height=370, radius=14)
 
     # COLLECTIONS
     section_title("COLLECTIONS")
@@ -482,6 +501,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
