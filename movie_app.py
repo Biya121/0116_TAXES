@@ -7,8 +7,8 @@ import streamlit as st
 st.set_page_config(page_title="Made in Nature | Official", layout="wide")
 
 # =========================
-# OPTIONAL: auto-refresh support
-# (If installed: pip install streamlit-autorefresh)
+# OPTIONAL: auto-refresh support (showcase rotation)
+# pip install streamlit-autorefresh
 # =========================
 try:
     from streamlit_autorefresh import st_autorefresh  # type: ignore
@@ -16,45 +16,76 @@ try:
 except Exception:
     HAS_AUTOREFRESH = False
 
+
 # =========================
 # UTIL
 # =========================
-def file_exists(path):
+def file_exists(path: str) -> bool:
     return bool(path) and os.path.isfile(path)
 
-def safe_image(path, caption=None, use_container_width=True, width=None):
+def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
+    """
+    Show image if exists, otherwise show a clean placeholder box (no warning blocks).
+    """
     if file_exists(path):
-        st.image(path, caption=caption, use_container_width=use_container_width, width=width)
+        st.image(path, use_container_width=True)
     else:
-        st.warning(f"이미지 파일을 찾을 수 없어요: {path}")
+        st.markdown(
+            f"""
+            <div style="
+                width:100%;
+                height:{height}px;
+                border-radius:{radius}px;
+                border:1px solid rgba(27,48,34,0.12);
+                background: rgba(255,255,255,0.70);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+            ">
+              <div style="
+                    color: rgba(15,26,18,0.55);
+                    font-weight:200;
+                    letter-spacing:0.06rem;
+                    line-height:1.6;
+                    text-align:center;
+                    padding:18px;
+              ">
+                IMAGE PLACEHOLDER<br>
+                <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-def section_title(text, subline=True):
-    # Streamlit 헤딩(#)을 쓰지 않고 HTML 텍스트로만 출력 → 앵커 아이콘 문제 회피
+def section_title(text: str):
+    # Streamlit 헤딩(#) 사용 안 함 → 앵커 아이콘/정렬 이슈 최소화
     st.markdown(
         """
         <style>
-        .mn-title {
+        .mn-title{
           text-align:center;
-          letter-spacing:0.28rem;
+          letter-spacing:0.32rem;
           color:#1B3022;
           font-weight:200;
-          margin: 70px 0 8px;
-          font-size: 1.25rem;
+          margin: 72px 0 10px;
+          font-size: 1.35rem;
         }
-        .mn-subline {
-          width: 34px;
-          height: 1px;
-          background: #C5A059;
-          margin: 14px auto 28px;
-          opacity: 0.95;
+        .mn-subline{
+          width:34px;
+          height:1px;
+          background:#C5A059;
+          margin: 16px auto 34px;
+          opacity:0.95;
         }
         </style>
         """,
         unsafe_allow_html=True
     )
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
-    if subline:
-        st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
+
 
 # =========================
 # GLOBAL STYLE
@@ -69,8 +100,9 @@ st.markdown("""
   --paper:#FBFAF7;
   --muted:rgba(15, 26, 18, 0.62);
   --line:rgba(27, 48, 34, 0.14);
-  --shadow: 0 18px 40px rgba(0,0,0,0.08);
   --shadow-soft: 0 12px 24px rgba(0,0,0,0.06);
+  --shadow: 0 18px 40px rgba(0,0,0,0.08);
+  --radius: 14px;
 }
 
 html, body, [class*="css"]{
@@ -89,64 +121,17 @@ html, body, [class*="css"]{
               linear-gradient(to bottom, var(--paper), #ffffff);
 }
 
-.mn-card{
-  background: rgba(255,255,255,0.75);
-  border: 1px solid rgba(27,48,34,0.12);
-  border-radius: 14px;
-  padding: 18px;
-  box-shadow: var(--shadow-soft);
-}
-.mn-badge{
-  display:inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(197,160,89,0.12);
-  border: 1px solid rgba(197,160,89,0.22);
-  color: rgba(27,48,34,0.85);
-  font-size: 0.78rem;
-  letter-spacing: 0.08rem;
-  font-weight: 200;
-  margin-bottom: 10px;
-}
-.mn-card-title{
-  margin: 10px 0 6px;
-  color: var(--deep);
-  font-weight: 200;
-  font-size: 1.25rem;
-  letter-spacing: 0.05rem;
-}
-.mn-card-desc{
-  margin: 0 0 14px;
-  color: var(--muted);
-  line-height: 1.8;
-  font-weight: 200;
-  font-size: 0.95rem;
-}
-
-.mn-logo-wrap{
-  text-align:center;
-  padding: 44px 0 22px;
-}
+/* Header */
+.mn-logo-wrap{ text-align:center; padding: 44px 0 22px; }
 .mn-logo-text{
-  font-size: 3.0rem;
-  letter-spacing: 0.75rem;
-  color: var(--deep);
-  font-weight: 200;
+  font-size: 3.0rem; letter-spacing: 0.75rem; color: var(--deep); font-weight: 200;
 }
+.mn-line{ width:34px; height:1px; background: var(--gold); margin: 22px auto 0; }
 .mn-logo-tag{
-  margin-top: 12px;
-  color: rgba(15, 26, 18, 0.58);
-  letter-spacing: 0.22rem;
-  font-weight: 200;
-  font-size: 0.95rem;
-}
-.mn-line{
-  width: 34px;
-  height: 1px;
-  background: var(--gold);
-  margin: 22px auto 0;
+  margin-top: 12px; color: rgba(15,26,18,0.58); letter-spacing: 0.22rem; font-weight: 200; font-size: 0.95rem;
 }
 
+/* Hero */
 .mn-hero{
   height: 450px;
   border-radius: 8px;
@@ -156,71 +141,124 @@ html, body, [class*="css"]{
   position: relative;
 }
 .mn-hero-overlay{
-  position:absolute;
-  inset:0;
+  position:absolute; inset:0;
   background: linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.45));
 }
 .mn-hero-content{
-  position: absolute;
-  inset: 0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-  padding: 0 16px;
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; text-align:center; padding: 0 16px;
 }
-.mn-hero-h2{
-  font-size: 1.0rem;
-  color: var(--gold);
-  letter-spacing: 0.48rem;
-  margin: 0 0 12px 0;
-  font-weight: 200;
-}
-.mn-hero-h1{
-  font-size: 2.8rem;
-  font-weight: 200;
-  color: #fff;
-  margin: 0;
-}
+.mn-hero-h2{ font-size: 1.0rem; color: var(--gold); letter-spacing: 0.48rem; margin:0 0 12px 0; font-weight:200; }
+.mn-hero-h1{ font-size: 2.8rem; font-weight: 200; color: #fff; margin: 0; }
 .mn-hero-p{
-  margin: 16px auto 0;
-  max-width: 720px;
-  color: rgba(255,255,255,0.82);
-  font-weight: 200;
-  line-height: 1.9;
+  margin: 16px auto 0; max-width: 720px;
+  color: rgba(255,255,255,0.82); font-weight: 200; line-height: 1.9;
 }
 
+/* Product card (빈 블럭/뱃지 제거된 버전) */
+.mn-card{
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(27,48,34,0.12);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
+}
+.mn-card-title{
+  margin: 14px 0 6px;
+  color: var(--deep);
+  font-weight: 200;
+  font-size: 1.28rem;
+  letter-spacing: 0.05rem;
+}
+.mn-card-desc{
+  margin: 0 0 14px;
+  color: rgba(15,26,18,0.62);
+  line-height: 1.85;
+  font-weight: 200;
+  font-size: 0.95rem;
+}
+
+/* Footer */
 .mn-footer{
   margin-top: 120px;
   padding: 34px 0 10px;
   border-top: 1px solid rgba(27,48,34,0.18);
   text-align:center;
 }
-.mn-footer-brand{
-  letter-spacing: 0.45rem;
-  color: #1B3022;
-  font-weight: 200;
-  font-size: 1.1rem;
-}
-.mn-footer-muted{
-  color: rgba(15, 26, 18, 0.55);
-  font-weight: 200;
-  line-height: 1.9;
-}
+.mn-footer-brand{ letter-spacing: 0.45rem; color: #1B3022; font-weight: 200; font-size: 1.1rem; }
+.mn-footer-muted{ color: rgba(15, 26, 18, 0.55); font-weight: 200; line-height: 1.9; }
+
+/* Tabs center */
+.stTabs [data-baseweb="tab-list"]{ justify-content: center; }
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================
-# STATE
+# DATA (Products)
+# - list_image: 컬렉션 카드 이미지
+# - detail_image: 상세 페이지 이미지
 # =========================
-if "selected_product" not in st.session_state:
-    st.session_state.selected_product = None
+PRODUCTS = {
+    "기름종이": {
+        "category": "화장품 & 화장소품",
+        "title": "프리미엄 기름종이",
+        "desc": "피부 유분을 자극 없이 흡수하는 천연 마 소재.",
+        "list_image": "oil_paper.jpg",
+        "detail_image": "oil_paper_detail.jpg",
+    },
+    "스타페이스": {
+        "category": "화장품 & 화장소품",
+        "title": "스타페이스 여드름패치",
+        "desc": "트러블을 빠르고 조용하게 진정시키는 스팟 솔루션.",
+        "list_image": "patch.jpg",
+        "detail_image": "patch_detail.jpg",
+    },
+    "도파민패치": {
+        "category": "건강식품",
+        "title": "도파민 패치",
+        "desc": "일상의 활력을 되찾아주는 에너제틱 솔루션.",
+        "list_image": "dopamine.jpg",
+        "detail_image": "dopamine_detail.jpg",
+    },
+    "나이트패치": {
+        "category": "건강식품",
+        "title": "나이트 패치",
+        "desc": "고요한 휴식을 선사하는 아로마 릴렉싱.",
+        "list_image": "night.jpg",
+        "detail_image": "night_detail.jpg",
+    },
+    "수세미": {
+        "category": "생활잡화",
+        "title": "코코넛 수세미",
+        "desc": "자연에서 온 거친 섬유의 완벽한 세척력.",
+        "list_image": "scrubber.jpg",
+        "detail_image": "scrubber_detail.jpg",
+    },
+    "칫솔": {
+        "category": "생활잡화",
+        "title": "대나무 칫솔",
+        "desc": "지속 가능한 욕실을 위한 친환경 선택.",
+        "list_image": "toothbrush.jpg",
+        "detail_image": "toothbrush_detail.jpg",
+    },
+}
+
+
+# =========================
+# STATE (Simple routing)
+# =========================
+if "page" not in st.session_state:
+    st.session_state.page = "home"   # "home" or "detail"
+if "selected_product_key" not in st.session_state:
+    st.session_state.selected_product_key = None
 if "showcase_i" not in st.session_state:
     st.session_state.showcase_i = 0
 
+
 # =========================
-# SECTION 1: HEADER
+# UI: HEADER
 # =========================
 st.markdown("""
 <div class="mn-logo-wrap">
@@ -230,8 +268,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+
 # =========================
-# SECTION 2: HERO
+# UI: HERO
 # =========================
 hero_bg = "hero_bg.jpg"
 if file_exists(hero_bg):
@@ -259,123 +298,170 @@ else:
 
 st.divider()
 
-# =========================
-# BRAND SHOWCASE
-# =========================
-section_title("BRAND SHOWCASE")
 
-showcase_images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg"]
-valid_showcase = [p for p in showcase_images if file_exists(p)]
+# =========================
+# PAGE: DETAIL
+# =========================
+def render_detail_page(product_key: str):
+    p = PRODUCTS.get(product_key)
+    if not p:
+        st.session_state.page = "home"
+        st.session_state.selected_product_key = None
+        st.rerun()
 
-if not valid_showcase:
-    st.warning("쇼케이스 이미지를 찾을 수 없어요. img1.jpg ~ img5.jpg 를 프로젝트 폴더에 넣어주세요.")
-else:
-    if HAS_AUTOREFRESH:
-        st_autorefresh(interval=3200, key="showcase_refresh")
-        st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
+    section_title("PRODUCT DETAIL")
+
+    # Back button
+    col_l, col_c, col_r = st.columns([1, 2, 1])
+    with col_c:
+        if st.button("← 컬렉션으로 돌아가기", use_container_width=True):
+            st.session_state.page = "home"
+            st.session_state.selected_product_key = None
+            st.rerun()
+
+    # Detail content
+    st.markdown(
+        f"""
+        <div style="text-align:center; margin-top: 14px;">
+          <div style="color:#1B3022; font-weight:200; font-size:2.0rem; letter-spacing:0.06rem;">
+            {p["title"]}
+          </div>
+          <div style="color: rgba(15,26,18,0.62); font-weight:200; margin-top:10px; line-height:1.9;">
+            {p["desc"]}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown("<div style='height:26px;'></div>", unsafe_allow_html=True)
+
+    # 상세 이미지
+    image_or_placeholder(p["detail_image"], height=740, radius=14)
+
+    st.markdown("<div style='height:22px;'></div>", unsafe_allow_html=True)
+
+    # (원하면 여기 아래에 상세 설명/성분/사용법 섹션 추가 가능)
+    st.markdown(
+        """
+        <div style="text-align:center; color: rgba(15,26,18,0.55); font-weight:200; line-height:1.9;">
+          상세 이미지 파일명은 각 제품별로 <b>xxx_detail.jpg</b> 형태로 매핑되어 있습니다.<br>
+          실제 파일명을 쓰고 싶으면 PRODUCTS 딕셔너리의 detail_image 경로만 바꾸면 됩니다.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# =========================
+# PAGE: HOME (Showcase + Collections)
+# =========================
+def render_home_page():
+    # BRAND SHOWCASE
+    section_title("BRAND SHOWCASE")
+
+    showcase_images = ["img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg"]
+    valid_showcase = [p for p in showcase_images if file_exists(p)]
+
+    if valid_showcase:
+        if HAS_AUTOREFRESH:
+            st_autorefresh(interval=3200, key="showcase_refresh")
+            st.session_state.showcase_i = (st.session_state.showcase_i + 1) % len(valid_showcase)
+        # 자동 로테이션 패키지 없으면 그냥 고정 1장
+        st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
     else:
-        st.caption("자동 로테이션을 원하면: `pip install streamlit-autorefresh` 설치 후 다시 실행하세요.")
+        image_or_placeholder("img1.jpg", height=740, radius=14)
 
-    st.image(valid_showcase[st.session_state.showcase_i], use_container_width=True)
+    # COLLECTIONS
+    section_title("COLLECTIONS")
 
-# =========================
-# COLLECTIONS
-# =========================
-section_title("COLLECTIONS")
+    tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
 
-tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
+    def product_card(product_key: str):
+        p = PRODUCTS[product_key]
+        st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
 
-product_images = {
-    "기름종이": "oil_paper.jpg",
-    "스타페이스": "patch.jpg",
-    "도파민패치": "dopamine.jpg",
-    "나이트패치": "night.jpg",
-    "수세미": "scrubber.jpg",
-    "칫솔": "toothbrush.jpg",
-}
+        # ✅ (요청 2) 키워드/뱃지 삭제했고, 이미지 위 빈 흰 블럭도 생성하지 않음
+        image_or_placeholder(p["list_image"], height=360, radius=14)
 
-def product_card(key, badge, title, desc, img_path, btn_key):
-    st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
-    st.markdown(f"<span class='mn-badge'>{badge}</span>", unsafe_allow_html=True)
-    safe_image(img_path, use_container_width=True)
-    st.markdown(f"<div class='mn-card-title'>{title}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='mn-card-desc'>{desc}</div>", unsafe_allow_html=True)
-    if st.button("제품 상세 페이지 이동", key=btn_key, use_container_width=True):
-        st.session_state.selected_product = key
+        st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
+
+        # ✅ (요청 3) 버튼 클릭 시 상세 페이지로 "이동"
+        if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
+            st.session_state.page = "detail"
+            st.session_state.selected_product_key = product_key
+            st.rerun()
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # 탭별 제품 배치
+    with tabs[0]:
+        keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
+        c1, c2 = st.columns(2, gap="large")
+        if len(keys) > 0:
+            with c1: product_card(keys[0])
+        if len(keys) > 1:
+            with c2: product_card(keys[1])
+
+    with tabs[1]:
+        keys = [k for k, v in PRODUCTS.items() if v["category"] == "건강식품"]
+        c1, c2 = st.columns(2, gap="large")
+        if len(keys) > 0:
+            with c1: product_card(keys[0])
+        if len(keys) > 1:
+            with c2: product_card(keys[1])
+
+    with tabs[2]:
+        keys = [k for k, v in PRODUCTS.items() if v["category"] == "생활잡화"]
+        c1, c2 = st.columns(2, gap="large")
+        if len(keys) > 0:
+            with c1: product_card(keys[0])
+        if len(keys) > 1:
+            with c2: product_card(keys[1])
+
+    # FOOTER (깔끔하게)
+    st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
+    st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
+    st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
+
+    st.markdown(
+        "<div class='mn-footer-muted'>"
+        "자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>"
+        "우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>"
+        "최상의 원료와 장인 정신을 고집합니다."
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
+
+    cols = st.columns(4)
+    labels = ["BRAND STORY", "COLLECTIONS", "SUSTAINABILITY", "CONTACT"]
+    urls = ["https://example.com"] * 4
+
+    for i, col in enumerate(cols):
+        with col:
+            try:
+                st.link_button(labels[i], urls[i], use_container_width=True)
+            except Exception:
+                st.button(labels[i], use_container_width=True)
+
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+    st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
+    st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
+    st.caption("Instagram. @madeinnature_official")
+    st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  PREMIUM NATURALISM & LUXURY DESIGN.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-with tabs[0]:
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
-        product_card("기름종이", "COSMETIC ACCESSORY", "프리미엄 기름종이",
-                     "피부 유분을 자극 없이 흡수하는 천연 마 소재.",
-                     product_images["기름종이"], "det1")
-    with c2:
-        product_card("스타페이스", "SPOT SOLUTION", "스타페이스 여드름패치",
-                     "트러블을 빠르고 조용하게 진정시키는 스팟 솔루션.",
-                     product_images["스타페이스"], "det2")
-
-with tabs[1]:
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
-        product_card("도파민패치", "WELLNESS PATCH", "도파민 패치",
-                     "일상의 활력을 되찾아주는 에너제틱 솔루션.",
-                     product_images["도파민패치"], "det3")
-    with c2:
-        product_card("나이트패치", "NIGHT RITUAL", "나이트 패치",
-                     "고요한 휴식을 선사하는 아로마 릴렉싱.",
-                     product_images["나이트패치"], "det4")
-
-with tabs[2]:
-    c1, c2 = st.columns(2, gap="large")
-    with c1:
-        product_card("수세미", "HOME CARE", "코코넛 수세미",
-                     "자연에서 온 거친 섬유의 완벽한 세척력.",
-                     product_images["수세미"], "det5")
-    with c2:
-        product_card("칫솔", "SUSTAINABLE BATH", "대나무 칫솔",
-                     "지속 가능한 욕실을 위한 친환경 선택.",
-                     product_images["칫솔"], "det6")
-
-if st.session_state.selected_product:
-    st.divider()
-    st.info(f"선택된 제품: **{st.session_state.selected_product}**  ·  (여기에 상세 페이지/외부 링크/멀티페이지 연결을 추가하면 완성됩니다.)")
 
 # =========================
-# FOOTER (NO HTML TAG CONTENT)
+# ROUTER
 # =========================
-st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
-st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
-st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
+if st.session_state.page == "detail" and st.session_state.selected_product_key:
+    render_detail_page(st.session_state.selected_product_key)
+else:
+    render_home_page()
 
-st.markdown(
-    "<div class='mn-footer-muted'>"
-    "자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>"
-    "우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>"
-    "최상의 원료와 장인 정신을 고집합니다."
-    "</div>",
-    unsafe_allow_html=True
-)
-
-st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
-
-# link_button이 Streamlit 버전에 없을 수 있어 try/fallback
-cols = st.columns(4)
-labels = ["BRAND STORY", "COLLECTIONS", "SUSTAINABILITY", "CONTACT"]
-urls = ["https://example.com"] * 4
-
-for i, col in enumerate(cols):
-    with col:
-        try:
-            st.link_button(labels[i], urls[i], use_container_width=True)
-        except Exception:
-            st.button(labels[i], use_container_width=True)
-
-st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
-st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
-st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
-st.caption("Instagram. @madeinnature_official")
-st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  PREMIUM NATURALISM & LUXURY DESIGN.")
-st.markdown("</div>", unsafe_allow_html=True)
 
 
