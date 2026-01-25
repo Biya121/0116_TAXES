@@ -379,7 +379,7 @@ st.markdown("""
 <div class="mn-logo-wrap">
   <div class="mn-logo-text">MADE IN NATURE</div>
   <div class="mn-line"></div>
-  <div class="mn-logo-tag">Premium Naturalism & Luxury Design</div>
+  <div class="mn-logo-tag">Nature on Genesis</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -392,9 +392,9 @@ if file_exists(hero_bg):
     st.image(hero_bg, use_container_width=True)
     st.markdown(
         "<div style='text-align:center; margin-top:-360px; position:relative; z-index:2;'>"
-        "<div class='mn-hero-h2'>Nature, defined by luxury</div>"
-        "<div class='mn-hero-h1'>자연의 가치를 증명하다</div>"
-        "<div class='mn-hero-p'>원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</div>"
+        "<div class='mn-hero-h2'>Nature on Genesis</div>"
+        "<div class='mn-hero-h1'>비워서 채운 자연</div>"
+        "<div class='mn-hero-p'>당신의 일상에 조용한 품격을 더합니다.</div>"
         "</div>",
         unsafe_allow_html=True
     )
@@ -404,7 +404,7 @@ else:
     <div class="mn-hero" style="background: linear-gradient(135deg, rgba(27,48,34,0.95), rgba(27,48,34,0.65));">
       <div class="mn-hero-overlay"></div>
       <div class="mn-hero-content">
-        <div class="mn-hero-h2">Nature, defined by luxury</div>
+        <div class="mn-hero-h2">Nature on Genesis</div>
         <div class="mn-hero-h1">자연의 가치를 증명하다</div>
         <div class="mn-hero-p">원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</div>
       </div>
@@ -601,7 +601,7 @@ def render_home_page():
     st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
     st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
     st.caption("Instagram. @madeinnature_official")
-    st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  PREMIUM NATURALISM & LUXURY DESIGN.")
+    st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  Nature on Genesis.")
     st.markdown("</div>", unsafe_allow_html=True)
 
 
