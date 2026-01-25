@@ -1,4 +1,4 @@
- import math  # ✅ 추가: math.ceil() 사용 때문에 필요
+import math  # ✅ 추가: math.ceil() 사용 때문에 필요
 import base64
 import os
 from typing import Optional
