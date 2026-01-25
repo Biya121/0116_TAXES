@@ -124,10 +124,7 @@ def section_title(text: str):
 # ---- (Data URI) HTML-only image (cache safe with mtime) ----
 @st.cache_data(show_spinner=False)
 def _to_data_uri(path: str, mtime: float) -> Optional[str]:
-    """
-    ✅ path + mtime 캐시 키:
-    파일이 나중에 생기거나 교체되어도 캐시가 자동 갱신.
-    """
+    """path + mtime 캐시 키로 data URI 생성(파일 교체/추가 시 자동 갱신)"""
     if not file_exists(path):
         return None
 
@@ -147,7 +144,7 @@ def _to_data_uri(path: str, mtime: float) -> Optional[str]:
         return None
 
 def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 14) -> str:
-    """✅ Collections 대표 이미지는 HTML 단일 블록으로만 렌더링."""
+    """Collections 대표 이미지는 HTML 단일 블록 렌더링."""
     mtime = os.path.getmtime(path) if file_exists(path) else 0.0
     uri = _to_data_uri(path, mtime)
 
@@ -166,6 +163,33 @@ def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 1
           IMAGE PLACEHOLDER<br>
           <span class="mn-ph-sub">{path}</span>
         </div>
+      </div>
+    </div>
+    """
+
+def html_header_logo_rect(path: str, *, max_w: int = 520, h: int = 120, radius: int = 10) -> str:
+    """
+    ✅ 요청 반영: 'MADE IN NATURE' 제목 위에 들어가는 직사각형 헤더 로고.
+    - max_w: 로고 영역 최대 폭
+    - h: 로고 영역 높이(헤더 느낌)
+    - radius: 라운드
+    """
+    mtime = os.path.getmtime(path) if file_exists(path) else 0.0
+    uri = _to_data_uri(path, mtime)
+
+    if uri:
+        return f"""
+        <div class="mn-rect-logo-wrap">
+          <div class="mn-rect-logo" style="max-width:{max_w}px; height:{h}px; border-radius:{radius}px;">
+            <img src="{uri}" alt="Made in Nature logo" class="mn-rect-logo-img"/>
+          </div>
+        </div>
+        """
+    # 로고 파일 없을 때 공간만 유지(레이아웃 안정)
+    return f"""
+    <div class="mn-rect-logo-wrap">
+      <div class="mn-rect-logo mn-rect-logo-ph" style="max-width:{max_w}px; height:{h}px; border-radius:{radius}px;">
+        <div style="color:rgba(15,26,18,0.45); font-weight:200; letter-spacing:0.12rem;">LOGO</div>
       </div>
     </div>
     """
@@ -195,7 +219,7 @@ html, body, [class*="css"]{
 .main .block-container{
   max-width: 1100px;
   margin: 0 auto;
-  padding-top: 4.2rem;
+  padding-top: 3.4rem;   /* ✅ 상단 여백 살짝 줄여 헤더 로고를 더 위로 */
   padding-bottom: 2.5rem;
 }
 
@@ -204,35 +228,41 @@ html, body, [class*="css"]{
               linear-gradient(to bottom, var(--paper), #ffffff);
 }
 
-/* Header */
-.mn-logo-wrap{ text-align:center; padding: 44px 0 22px; }
+/* ✅ Rect header logo (요청한 방식) */
+.mn-rect-logo-wrap{
+  display:flex;
+  justify-content:center;
+  margin: 10px 0 8px; /* 로고 아래 제목과 간격 */
+}
+.mn-rect-logo{
+  width: 100%;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(27,48,34,0.12);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.04);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 10px 14px;
+}
+.mn-rect-logo-img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ✅ 직사각형 안에서 비율 유지 */
+  display:block;
+}
+.mn-rect-logo-ph{
+  background: rgba(255,255,255,0.55);
+}
+
+/* Header text */
+.mn-logo-wrap{ text-align:center; padding: 6px 0 18px; } /* ✅ 로고 이미지가 위에 있으니 패딩 축소 */
 .mn-logo-text{
   font-size: 3.0rem; letter-spacing: 0.75rem; color: var(--deep); font-weight: 200;
 }
 .mn-line{ width:34px; height:1px; background: var(--gold); margin: 22px auto 0; }
 .mn-logo-tag{
   margin-top: 12px; color: rgba(15,26,18,0.58); letter-spacing: 0.22rem; font-weight: 200; font-size: 0.95rem;
-}
-
-/* logo slot */
-.mn-logo-slot{
-  width: 74px;
-  height: 74px;
-  margin: 0 auto 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(27,48,34,0.10);
-  background: rgba(255,255,255,0.55);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.04);
-}
-.mn-logo-img{
-  width: 58px;
-  height: 58px;
-  object-fit: contain;
-  display:block;
-  opacity: 0.98;
 }
 
 /* Hero */
@@ -283,7 +313,7 @@ html, body, [class*="css"]{
   font-size: 0.95rem;
 }
 
-/* ✅ Collections 대표 이미지 전용(흰박스/여백 제거) */
+/* ✅ Collections 대표 이미지(흰박스/여백 제거) */
 .mn-imgwrap{
   width:100%;
   display:flex;
@@ -324,7 +354,7 @@ html, body, [class*="css"]{
 }
 .mn-ph-sub{ font-size:0.9rem; opacity:0.75; }
 
-/* ✅ st.markdown이 만드는 기본 마진/빈 p 제거(흰 박스처럼 보이는 현상 방지) */
+/* ✅ st.markdown 기본 마진/빈 p 제거(흰 박스처럼 보이는 현상 방지) */
 div[data-testid="stMarkdownContainer"] > p { margin: 0 !important; padding: 0 !important; }
 div[data-testid="stMarkdownContainer"] { margin: 0 !important; padding: 0 !important; }
 
@@ -434,29 +464,29 @@ if "animate_detail" not in st.session_state:
 
 
 # =========================
-# UI: HEADER (✅ 로고 JPG 반영)
+# UI: HEADER (✅ 직사각형 로고 → 제목 위)
 # =========================
-# 같은 폴더에 logo.jpg 를 넣으면 자동 표시됩니다.
-# 파일명이 다르면 아래 문자열만 변경하세요.
-logo_path = "logo.jpg"
+# 같은 폴더에 header_logo.jpg 를 넣으면 됨 (원하는 파일명으로 바꿔도 OK)
+header_logo_path = "header_logo.jpg"
 
-# 혹시 jpeg 확장자를 쓰는 경우까지 자동 대응하고 싶으면 아래처럼:
-# logo_path = "logo.jpg" if file_exists("logo.jpg") else "logo.jpeg"
+# 로고 영역 규격(원하는대로 여기만 조정하면 됨)
+HEADER_LOGO_MAX_W = 560   # 가로 최대 (px)
+HEADER_LOGO_H = 110       # 세로 높이 (px)
+HEADER_LOGO_RADIUS = 12   # 라운드
 
-if file_exists(logo_path):
-    logo_mtime = os.path.getmtime(logo_path)
-    logo_uri = _to_data_uri(logo_path, logo_mtime)
-else:
-    logo_uri = None
+st.markdown(
+    html_header_logo_rect(
+        header_logo_path,
+        max_w=HEADER_LOGO_MAX_W,
+        h=HEADER_LOGO_H,
+        radius=HEADER_LOGO_RADIUS,
+    ),
+    unsafe_allow_html=True
+)
 
-if logo_uri:
-    logo_block = f"<div class='mn-logo-slot'><img class='mn-logo-img' src='{logo_uri}' alt='logo'/></div>"
-else:
-    logo_block = "<div class='mn-logo-slot'></div>"
-
+# 텍스트 타이틀/태그는 그대로
 st.markdown(f"""
 <div class="mn-logo-wrap">
-  {logo_block}
   <div class="mn-logo-text">MADE IN NATURE</div>
   <div class="mn-line"></div>
   <div class="mn-logo-tag">Nature on Genesis</div>
@@ -485,7 +515,7 @@ else:
       <div class="mn-hero-overlay"></div>
       <div class="mn-hero-content">
         <div class="mn-hero-h2">Nature on Genesis</div>
-        <div class="mn-hero-h1">비워서 채운 자연</div>
+        <div class="mn-hero-h1">자연의 가치를 증명하다</div>
         <div class="mn-hero-p">당신의 일상에 조용한 품격을 더합니다.</div>
       </div>
     </div>
@@ -695,6 +725,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
