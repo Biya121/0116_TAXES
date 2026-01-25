@@ -1,4 +1,3 @@
-import math
 import base64
 import os
 from typing import Optional
@@ -383,6 +382,12 @@ PRODUCTS = {
             "beeswax_wrap_detail3.png",
             "beeswax_wrap_detail4.png",
             "beeswax_wrap_detail5.png",
+            "beeswax_wrap_detail6.png",
+            "beeswax_wrap_detail7.png",
+            "beeswax_wrap_detail8.png",
+            "beeswax_wrap_detail9.png",
+            "beeswax_wrap_detail10.png",
+            "beeswax_wrap_detail11.png"
         ],
     },
 
