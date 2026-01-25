@@ -123,7 +123,12 @@ def section_title(text: str):
 
 # ---- (Collections) HTML-only image to prevent the “white box above image” ----
 @st.cache_data(show_spinner=False)
-def _to_data_uri(path: str) -> Optional[str]:
+def _to_data_uri(path: str, mtime: float) -> Optional[str]:
+    """
+    ✅ 캐시 이슈 해결:
+    path만 캐싱하면 '없던 시점(None)'이 계속 남을 수 있어서
+    파일 수정 시간(mtime)을 함께 캐시 키로 사용해 자동 갱신되게 함.
+    """
     if not file_exists(path):
         return None
     ext = os.path.splitext(path)[1].lower().replace(".", "")
@@ -140,7 +145,9 @@ def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 1
     Collections 이미지용: HTML 한 덩어리로만 렌더링(흰색 박스/태그 노출 방지)
     size_px=1000 요청 반영
     """
-    uri = _to_data_uri(path)
+    mtime = os.path.getmtime(path) if file_exists(path) else 0.0
+    uri = _to_data_uri(path, mtime)
+
     if uri:
         return f"""
         <div style="width:100%; display:flex; justify-content:center;">
@@ -435,7 +442,11 @@ if "animate_detail" not in st.session_state:
 # UI: HEADER
 # =========================
 logo_path = "logo.png"
-logo_uri = _to_data_uri(logo_path) if file_exists(logo_path) else None
+if file_exists(logo_path):
+    logo_mtime = os.path.getmtime(logo_path)
+    logo_uri = _to_data_uri(logo_path, logo_mtime)
+else:
+    logo_uri = None
 
 if logo_uri:
     logo_block = f"<div class='mn-logo-slot'><img class='mn-logo-img' src='{logo_uri}' alt='logo'/></div>"
