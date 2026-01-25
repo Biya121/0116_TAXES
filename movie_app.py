@@ -1,4 +1,4 @@
-import math  # ✅ 추가: math.ceil() 사용 때문에 필요
+ import math  # ✅ 추가: math.ceil() 사용 때문에 필요
 import base64
 import os
 from typing import Optional
@@ -356,7 +356,7 @@ PRODUCTS = {
         "list_image": "oil_paper.png",
         "detail_image": "oil_paper_detail1.png",
         "detail_image": "oil_paper_detail2.png",
-        "detail_image": "oil_paper_detail3.png"
+        "detail_image": "oil_paper_detail3.png",
     },
     "스타페이스": {
         "category": "화장품 & 화장소품",
@@ -365,7 +365,7 @@ PRODUCTS = {
         "list_image": "patch.png",
         "detail_image": "patch_detail1.png",
         "detail_image": "patch_detail2.png",
-        "detail_image": "patch_detail3.png"
+        "detail_image": "patch_detail3.png",
     },
     "도파민패치": {
         "category": "건강식품",
@@ -376,7 +376,7 @@ PRODUCTS = {
         "detail_image": "dopamine_detail2.png",
         "detail_image": "dopamine_detail3.png",
         "detail_image": "dopamine_detail4.png",
-        "detail_image": "dopamine_detail5.png"
+        "detail_image": "dopamine_detail5.png",
     },
     "나이트패치": {
         "category": "건강식품",
@@ -386,9 +386,8 @@ PRODUCTS = {
         "detail_image": "night_detail1.png",
         "detail_image": "night_detail2.png",
         "detail_image": "night_detail3.png",
-        "detail_image": "night_detail4.png"
+        "detail_image": "night_detail4.png",
     },
-
     "비즈왁스랩": {
         "category": "생활잡화",
         "title": "비즈왁스 랩",
@@ -405,10 +404,9 @@ PRODUCTS = {
             "beeswax_wrap_detail8.png",
             "beeswax_wrap_detail9.png",
             "beeswax_wrap_detail10.png",
-            "beeswax_wrap_detail11.png"
+            "beeswax_wrap_detail11.png",
         ],
     },
-
     "칫솔": {
         "category": "생활잡화",
         "title": "대나무 칫솔",
@@ -648,6 +646,42 @@ def render_home_page():
         if len(keys) > 1:
             with c2: product_card(keys[1])
 
+    # =========================
+    # FOOTER (✅ 사용자가 준 하단 블록 추가)
+    # =========================
+    st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
+    st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
+    st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
+
+    st.markdown(
+        "<div class='mn-footer-muted'>"
+        "자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>"
+        "우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>"
+        "최상의 원료와 장인 정신을 고집합니다."
+        "</div>",
+        unsafe_allow_html=True
+    )
+
+    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
+
+    cols = st.columns(4)
+    labels = ["BRAND STORY", "COLLECTIONS", "SUSTAINABILITY", "CONTACT"]
+    urls = ["https://example.com"] * 4
+
+    for i, col in enumerate(cols):
+        with col:
+            try:
+                st.link_button(labels[i], urls[i], use_container_width=True)
+            except Exception:
+                st.button(labels[i], use_container_width=True)
+
+    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+    st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
+    st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
+    st.caption("Instagram. @madeinnature_official")
+    st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  Nature on Genesis.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 # =========================
 # ROUTER
@@ -656,6 +690,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
