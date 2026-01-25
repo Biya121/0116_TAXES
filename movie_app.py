@@ -29,7 +29,6 @@ def file_exists(path: Optional[str]) -> bool:
     """Path가 문자열이고 실제 파일이면 True."""
     return bool(path) and isinstance(path, str) and os.path.isfile(path)
 
-
 def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
     """Show image if exists; otherwise show a clean placeholder (no warning blocks)."""
     if file_exists(path):
@@ -64,7 +63,6 @@ def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
             unsafe_allow_html=True
         )
 
-
 def square_placeholder(path: str, *, size: int = 500, radius: int = 14):
     st.markdown(
         f"""
@@ -96,7 +94,6 @@ def square_placeholder(path: str, *, size: int = 500, radius: int = 14):
         unsafe_allow_html=True
     )
 
-
 def section_title(text: str):
     """Centered title without Streamlit heading anchors."""
     st.markdown(
@@ -124,26 +121,19 @@ def section_title(text: str):
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
 
-
 # ---- (Collections) HTML-only image to prevent the “white box above image” ----
 @st.cache_data(show_spinner=False)
 def _to_data_uri(path: str) -> Optional[str]:
     if not file_exists(path):
         return None
     ext = os.path.splitext(path)[1].lower().replace(".", "")
-    mime = {
-        "png": "image/png",
-        "jpg": "image/jpeg",
-        "jpeg": "image/jpeg",
-        "webp": "image/webp",
-    }.get(ext, "image/png")
+    mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "webp": "image/webp"}.get(ext, "image/png")
     try:
         with open(path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("utf-8")
         return f"data:{mime};base64,{b64}"
     except Exception:
         return None
-
 
 def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 14) -> str:
     """
@@ -239,20 +229,33 @@ html, body, [class*="css"]{
 
 /* Header */
 .mn-logo-wrap{ text-align:center; padding: 44px 0 22px; }
-.mn-logo-img{
-  width: 74px;
-  height: 74px;
-  object-fit: contain;
-  margin: 0 auto 14px;
-  display:block;
-  opacity: 0.95;
-}
 .mn-logo-text{
   font-size: 3.0rem; letter-spacing: 0.75rem; color: var(--deep); font-weight: 200;
 }
 .mn-line{ width:34px; height:1px; background: var(--gold); margin: 22px auto 0; }
 .mn-logo-tag{
   margin-top: 12px; color: rgba(15,26,18,0.58); letter-spacing: 0.22rem; font-weight: 200; font-size: 0.95rem;
+}
+
+/* logo slot */
+.mn-logo-slot{
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(27,48,34,0.10);
+  background: rgba(255,255,255,0.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.04);
+}
+.mn-logo-img{
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  display:block;
+  opacity: 0.98;
 }
 
 /* Hero */
@@ -367,7 +370,8 @@ PRODUCTS = {
         "list_image": "night.jpg",
         "detail_image": "night_detail.jpg",
     },
-    # ✅ 코코넛 수세미 → 비즈왁스랩 대체
+
+    # (2) 코코넛 수세미 → 비즈왁스랩으로 교체
     "비즈왁스랩": {
         "category": "생활잡화",
         "title": "비즈왁스 랩",
@@ -381,6 +385,7 @@ PRODUCTS = {
             "beeswax_wrap_detail5.png",
         ],
     },
+
     "칫솔": {
         "category": "생활잡화",
         "title": "대나무 칫솔",
@@ -406,21 +411,26 @@ if "selected_product_key" not in st.session_state:
     st.session_state.selected_product_key = None
 if "showcase_page" not in st.session_state:
     st.session_state.showcase_page = 0
+if "animate_detail" not in st.session_state:
+    st.session_state.animate_detail = False
 
 
 # =========================
-# UI: HEADER (with logo slot)
+# UI: HEADER
 # =========================
-logo_path = "logo.png"  # 여기에 로고 파일명 넣기 (없으면 자동으로 텍스트만 표시)
-logo_html = ""
-if file_exists(logo_path):
-    uri = _to_data_uri(logo_path)
-    if uri:
-        logo_html = f"<img class='mn-logo-img' src='{uri}' alt='logo'/>"
+# (3) 로고 공간 마련: logo.png가 있으면 표시, 없으면 슬롯만 보여서 "공간" 확인 가능
+logo_path = "logo.png"
+logo_uri = _to_data_uri(logo_path) if file_exists(logo_path) else None
+
+if logo_uri:
+    logo_block = f"<div class='mn-logo-slot'><img class='mn-logo-img' src='{logo_uri}' alt='logo'/></div>"
+else:
+    # 로고가 없더라도 '공간 마련'이 눈에 보이도록 슬롯만 표시
+    logo_block = "<div class='mn-logo-slot'></div>"
 
 st.markdown(f"""
 <div class="mn-logo-wrap">
-  {logo_html}
+  {logo_block}
   <div class="mn-logo-text">MADE IN NATURE</div>
   <div class="mn-line"></div>
   <div class="mn-logo-tag">Nature on Genesis</div>
@@ -468,9 +478,13 @@ def render_detail_page(product_key: str):
         st.session_state.selected_product_key = None
         st.rerun()
 
-    # ✅ 상세페이지 진입 시: 맨 위(스타트)로 스크롤 + fade-in 시작
+    # (6) 스타트 값: 진입 시 무조건 맨 위 + 부드러운 전환
     components.html("<script>window.scrollTo(0,0);</script>", height=0)
-    st.markdown("<div class='mn-fadein'>", unsafe_allow_html=True)
+    if st.session_state.animate_detail:
+        st.markdown("<div class='mn-fadein'>", unsafe_allow_html=True)
+        st.session_state.animate_detail = False
+    else:
+        st.markdown("<div>", unsafe_allow_html=True)
 
     section_title("PRODUCT DETAIL")
 
@@ -499,19 +513,17 @@ def render_detail_page(product_key: str):
     else:
         image_or_placeholder(str(detail), height=740, radius=14)
 
-    # ✅ 이미지가 모두 나온 뒤에 뒤로가기 버튼 표시
-    st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-
+    # (5) 뒤로가기 버튼: 사진 다 나온 뒤에만 보이게
+    st.markdown("<div style='height:22px;'></div>", unsafe_allow_html=True)
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
         st.markdown('<div class="back-btn">', unsafe_allow_html=True)
-        if st.button("← 컬렉션으로 돌아가기", use_container_width=True, key="back_to_collections_bottom"):
+        if st.button("← 컬렉션으로 돌아가기", use_container_width=True, key="back_bottom"):
             st.session_state.page = "home"
             st.session_state.selected_product_key = None
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # fade-in 종료
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -522,13 +534,10 @@ def render_home_page():
     # BRAND SHOWCASE
     section_title("BRAND SHOWCASE")
 
-    # ✅ 5칸 → 8칸 확장 (2개씩 페이지 유지)
-    showcase_images = [
-        "img1.png", "img2.png", "img3.png", "img4.png",
-        "img5.png", "img6.png", "img7.png", "img8.png",
-    ]
-    valid_showcase = [p for p in showcase_images if file_exists(p)]
-    src = valid_showcase if valid_showcase else showcase_images
+    # (4) 8칸 확장: 더 이상 valid_showcase로 줄이지 않음.
+    # 파일이 없어도 placeholder로 8칸 유지되어 "확장"이 바로 보임.
+    showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png", "img6.png", "img7.png", "img8.png"]
+    src = showcase_images
 
     per_page = 2
     total_pages = max(1, math.ceil(len(src) / per_page))
@@ -581,54 +590,50 @@ def render_home_page():
 
     tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
 
+    # (1) 탭에서 "코드가 그대로 출력"되는 깨짐 방지:
+    # card_html 전체를 한 덩어리로 넣지 않고,
+    # - 카드 wrapper
+    # - 이미지 html
+    # - 텍스트(제목/설명)
+    # 순서로 분리해서 넣어 Markdown 파서가 깨지는 케이스를 줄임 (레이아웃은 동일)
     def product_card(product_key: str):
         p = PRODUCTS[product_key]
 
-        # ✅ 탭/레이아웃 깨짐(코드가 노출되거나 레이아웃이 무너짐) 방지:
-        # st.markdown(unsafe_html) 대신 components.html로 고정 높이 렌더링
-        card_html = f"""
-        <div class="mn-card">
-          {html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14)}
-          <div class="mn-card-title">{p["title"]}</div>
-          <div class="mn-card-desc">{p["desc"]}</div>
-        </div>
-        """
-        components.html(card_html, height=760, scrolling=False)
+        st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
+        st.markdown(html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14), unsafe_allow_html=True)
+        st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
+            st.session_state.animate_detail = True  # (6) 상세 진입 애니메이션 트리거
             st.rerun()
 
     with tabs[0]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "화장품 & 화장소품"]
         c1, c2 = st.columns(2, gap="large")
         if len(keys) > 0:
-            with c1:
-                product_card(keys[0])
+            with c1: product_card(keys[0])
         if len(keys) > 1:
-            with c2:
-                product_card(keys[1])
+            with c2: product_card(keys[1])
 
     with tabs[1]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "건강식품"]
         c1, c2 = st.columns(2, gap="large")
         if len(keys) > 0:
-            with c1:
-                product_card(keys[0])
+            with c1: product_card(keys[0])
         if len(keys) > 1:
-            with c2:
-                product_card(keys[1])
+            with c2: product_card(keys[1])
 
     with tabs[2]:
         keys = [k for k, v in PRODUCTS.items() if v["category"] == "생활잡화"]
         c1, c2 = st.columns(2, gap="large")
         if len(keys) > 0:
-            with c1:
-                product_card(keys[0])
+            with c1: product_card(keys[0])
         if len(keys) > 1:
-            with c2:
-                product_card(keys[1])
+            with c2: product_card(keys[1])
 
     # FOOTER
     st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
