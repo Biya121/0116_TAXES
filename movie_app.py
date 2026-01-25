@@ -346,29 +346,40 @@ PRODUCTS = {
         "category": "화장품 & 화장소품",
         "title": "프리미엄 기름종이",
         "desc": "피부 유분을 자극 없이 흡수하는 천연 마 소재.",
-        "list_image": "oil_paper.jpg",
-        "detail_image": "oil_paper_detail.jpg",
+        "list_image": "oil_paper.png",
+        "detail_image": "oil_paper_detail1.png",
+        "detail_image": "oil_paper_detail2.png",
+        "detail_image": "oil_paper_detail3.png"
     },
     "스타페이스": {
         "category": "화장품 & 화장소품",
         "title": "스타페이스 여드름패치",
         "desc": "트러블을 빠르고 조용하게 진정시키는 스팟 솔루션.",
-        "list_image": "patch.jpg",
-        "detail_image": "patch_detail.jpg",
+        "list_image": "patch.png",
+        "detail_image": "patch_detail1.png",
+        "detail_image": "patch_detail2.png",
+        "detail_image": "patch_detail3.png"
     },
     "도파민패치": {
         "category": "건강식품",
         "title": "도파민 패치",
         "desc": "일상의 활력을 되찾아주는 에너제틱 솔루션.",
-        "list_image": "dopamine.jpg",
-        "detail_image": "dopamine_detail.jpg",
+        "list_image": "dopamine.png",
+        "detail_image": "dopamine_detail1.png",
+        "detail_image": "dopamine_detail2.png",
+        "detail_image": "dopamine_detail3.png",
+        "detail_image": "dopamine_detail4.png",
+        "detail_image": "dopamine_detail5.png"
     },
     "나이트패치": {
         "category": "건강식품",
         "title": "나이트 패치",
         "desc": "고요한 휴식을 선사하는 아로마 릴렉싱.",
-        "list_image": "night.jpg",
-        "detail_image": "night_detail.jpg",
+        "list_image": "night.png",
+        "detail_image": "night_detail1.png",
+        "detail_image": "night_detail2.png",
+        "detail_image": "night_detail3.png",
+        "detail_image": "night_detail4.png"
     },
 
     "비즈왁스랩": {
