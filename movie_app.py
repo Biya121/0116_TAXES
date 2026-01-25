@@ -1,4 +1,4 @@
-import math  # ✅ 추가: math.ceil() 사용 때문에 필요
+import math
 import base64
 import os
 from typing import Optional
@@ -121,18 +121,24 @@ def section_title(text: str):
     st.markdown(f"<div class='mn-title'>{text}</div>", unsafe_allow_html=True)
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
 
-# ---- (Collections) HTML-only image to prevent the “white box above image” ----
+# ---- (Data URI) HTML-only image (cache safe with mtime) ----
 @st.cache_data(show_spinner=False)
 def _to_data_uri(path: str, mtime: float) -> Optional[str]:
     """
-    ✅ 캐시 이슈 해결:
-    path만 캐싱하면 '없던 시점(None)'이 계속 남을 수 있어서
-    파일 수정 시간(mtime)을 함께 캐시 키로 사용해 자동 갱신되게 함.
+    ✅ path + mtime 캐시 키:
+    파일이 나중에 생기거나 교체되어도 캐시가 자동 갱신.
     """
     if not file_exists(path):
         return None
+
     ext = os.path.splitext(path)[1].lower().replace(".", "")
-    mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "webp": "image/webp"}.get(ext, "image/png")
+    mime = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "webp": "image/webp",
+    }.get(ext, "image/png")
+
     try:
         with open(path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode("utf-8")
@@ -141,60 +147,24 @@ def _to_data_uri(path: str, mtime: float) -> Optional[str]:
         return None
 
 def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 14) -> str:
-    """
-    Collections 이미지용: HTML 한 덩어리로만 렌더링(흰색 박스/태그 노출 방지)
-    size_px=1000 요청 반영
-    """
+    """✅ Collections 대표 이미지는 HTML 단일 블록으로만 렌더링."""
     mtime = os.path.getmtime(path) if file_exists(path) else 0.0
     uri = _to_data_uri(path, mtime)
 
     if uri:
         return f"""
-        <div style="width:100%; display:flex; justify-content:center;">
-          <div style="width:100%; max-width:{size_px}px;">
-            <div style="
-              width:100%;
-              aspect-ratio: 1 / 1;
-              border-radius:{radius}px;
-              overflow:hidden;
-              border:1px solid rgba(27,48,34,0.12);
-              box-shadow: 0 12px 24px rgba(0,0,0,0.05);
-              background: rgba(255,255,255,0.55);
-            ">
-              <img src="{uri}" style="
-                width:100%;
-                height:100%;
-                object-fit:cover;
-                display:block;
-              "/>
-            </div>
+        <div class="mn-imgwrap">
+          <div class="mn-imgbox" style="max-width:{size_px}px; border-radius:{radius}px;">
+            <img src="{uri}" class="mn-img" alt="{os.path.basename(path)}"/>
           </div>
         </div>
         """
     return f"""
-    <div style="width:100%; display:flex; justify-content:center;">
-      <div style="
-          width:100%;
-          max-width:{size_px}px;
-          aspect-ratio: 1 / 1;
-          border-radius:{radius}px;
-          border:1px solid rgba(27,48,34,0.12);
-          background: rgba(255,255,255,0.70);
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          box-shadow: 0 12px 24px rgba(0,0,0,0.05);
-      ">
-        <div style="
-              color: rgba(15,26,18,0.55);
-              font-weight:200;
-              letter-spacing:0.06rem;
-              line-height:1.6;
-              text-align:center;
-              padding:18px;
-        ">
+    <div class="mn-imgwrap">
+      <div class="mn-imgbox mn-ph" style="max-width:{size_px}px; border-radius:{radius}px;">
+        <div class="mn-ph-txt">
           IMAGE PLACEHOLDER<br>
-          <span style="font-size:0.9rem; opacity:0.75;">{path}</span>
+          <span class="mn-ph-sub">{path}</span>
         </div>
       </div>
     </div>
@@ -313,6 +283,51 @@ html, body, [class*="css"]{
   font-size: 0.95rem;
 }
 
+/* ✅ Collections 대표 이미지 전용(흰박스/여백 제거) */
+.mn-imgwrap{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  margin:0;
+  padding:0;
+}
+.mn-imgbox{
+  width:100%;
+  aspect-ratio: 1 / 1;
+  overflow:hidden;
+  border:1px solid rgba(27,48,34,0.12);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+  background: rgba(255,255,255,0.55);
+}
+.mn-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.mn-ph{
+  background: rgba(255,255,255,0.70);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.mn-ph-txt{
+  color: rgba(15,26,18,0.55);
+  font-weight:200;
+  letter-spacing:0.06rem;
+  line-height:1.6;
+  text-align:center;
+  padding:18px;
+}
+.mn-ph-sub{ font-size:0.9rem; opacity:0.75; }
+
+/* ✅ st.markdown이 만드는 기본 마진/빈 p 제거(흰 박스처럼 보이는 현상 방지) */
+div[data-testid="stMarkdownContainer"] > p { margin: 0 !important; padding: 0 !important; }
+div[data-testid="stMarkdownContainer"] { margin: 0 !important; padding: 0 !important; }
+
 /* Back button styling */
 .back-btn button{
   border-radius: 999px !important;
@@ -354,39 +369,31 @@ PRODUCTS = {
         "title": "프리미엄 기름종이",
         "desc": "피부 유분을 자극 없이 흡수하는 천연 마 소재.",
         "list_image": "oil_paper.png",
-        "detail_image": "oil_paper_detail1.png",
-        "detail_image": "oil_paper_detail2.png",
-        "detail_image": "oil_paper_detail3.png",
+        "detail_image": ["oil_paper_detail1.png", "oil_paper_detail2.png", "oil_paper_detail3.png"],
     },
     "스타페이스": {
         "category": "화장품 & 화장소품",
         "title": "스타페이스 여드름패치",
         "desc": "트러블을 빠르고 조용하게 진정시키는 스팟 솔루션.",
         "list_image": "patch.png",
-        "detail_image": "patch_detail1.png",
-        "detail_image": "patch_detail2.png",
-        "detail_image": "patch_detail3.png",
+        "detail_image": ["patch_detail1.png", "patch_detail2.png", "patch_detail3.png"],
     },
     "도파민패치": {
         "category": "건강식품",
         "title": "도파민 패치",
         "desc": "일상의 활력을 되찾아주는 에너제틱 솔루션.",
         "list_image": "dopamine.png",
-        "detail_image": "dopamine_detail1.png",
-        "detail_image": "dopamine_detail2.png",
-        "detail_image": "dopamine_detail3.png",
-        "detail_image": "dopamine_detail4.png",
-        "detail_image": "dopamine_detail5.png",
+        "detail_image": [
+            "dopamine_detail1.png", "dopamine_detail2.png", "dopamine_detail3.png",
+            "dopamine_detail4.png", "dopamine_detail5.png",
+        ],
     },
     "나이트패치": {
         "category": "건강식품",
         "title": "나이트 패치",
         "desc": "고요한 휴식을 선사하는 아로마 릴렉싱.",
         "list_image": "night.png",
-        "detail_image": "night_detail1.png",
-        "detail_image": "night_detail2.png",
-        "detail_image": "night_detail3.png",
-        "detail_image": "night_detail4.png",
+        "detail_image": ["night_detail1.png", "night_detail2.png", "night_detail3.png", "night_detail4.png"],
     },
     "비즈왁스랩": {
         "category": "생활잡화",
@@ -394,17 +401,10 @@ PRODUCTS = {
         "desc": "일회용 랩 대신, 자연을 감싸는 재사용 가능한 보관 솔루션.",
         "list_image": "beeswax_wrap.png",
         "detail_image": [
-            "beeswax_wrap_detail1.png",
-            "beeswax_wrap_detail2.png",
-            "beeswax_wrap_detail3.png",
-            "beeswax_wrap_detail4.png",
-            "beeswax_wrap_detail5.png",
-            "beeswax_wrap_detail6.png",
-            "beeswax_wrap_detail7.png",
-            "beeswax_wrap_detail8.png",
-            "beeswax_wrap_detail9.png",
-            "beeswax_wrap_detail10.png",
-            "beeswax_wrap_detail11.png",
+            "beeswax_wrap_detail1.png", "beeswax_wrap_detail2.png", "beeswax_wrap_detail3.png",
+            "beeswax_wrap_detail4.png", "beeswax_wrap_detail5.png", "beeswax_wrap_detail6.png",
+            "beeswax_wrap_detail7.png", "beeswax_wrap_detail8.png", "beeswax_wrap_detail9.png",
+            "beeswax_wrap_detail10.png", "beeswax_wrap_detail11.png",
         ],
     },
     "칫솔": {
@@ -413,11 +413,8 @@ PRODUCTS = {
         "desc": "지속 가능한 욕실을 위한 친환경 선택.",
         "list_image": "toothbrush.png",
         "detail_image": [
-            "toothbrush_detail1.png",
-            "toothbrush_detail2.png",
-            "toothbrush_detail3.png",
-            "toothbrush_detail4.png",
-            "toothbrush_detail5.png",
+            "toothbrush_detail1.png", "toothbrush_detail2.png", "toothbrush_detail3.png",
+            "toothbrush_detail4.png", "toothbrush_detail5.png",
         ],
     },
 }
@@ -437,9 +434,15 @@ if "animate_detail" not in st.session_state:
 
 
 # =========================
-# UI: HEADER
+# UI: HEADER (✅ 로고 JPG 반영)
 # =========================
-logo_path = "logo.png"
+# 같은 폴더에 logo.jpg 를 넣으면 자동 표시됩니다.
+# 파일명이 다르면 아래 문자열만 변경하세요.
+logo_path = "logo.jpg"
+
+# 혹시 jpeg 확장자를 쓰는 경우까지 자동 대응하고 싶으면 아래처럼:
+# logo_path = "logo.jpg" if file_exists("logo.jpg") else "logo.jpeg"
+
 if file_exists(logo_path):
     logo_mtime = os.path.getmtime(logo_path)
     logo_uri = _to_data_uri(logo_path, logo_mtime)
@@ -604,17 +607,19 @@ def render_home_page():
                 square_placeholder(page_imgs[1], size=500, radius=14)
 
     section_title("COLLECTIONS")
-
     tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
 
     def product_card(product_key: str):
         p = PRODUCTS[product_key]
-
-        st.markdown("<div class='mn-card'>", unsafe_allow_html=True)
-        st.markdown(html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14), unsafe_allow_html=True)
-        st.markdown(f"<div class='mn-card-title'>{p['title']}</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='mn-card-desc'>{p['desc']}</div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        img_html = html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14)
+        card_html = f"""
+        <div class="mn-card">
+          {img_html}
+          <div class="mn-card-title">{p['title']}</div>
+          <div class="mn-card-desc">{p['desc']}</div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
 
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
@@ -647,7 +652,7 @@ def render_home_page():
             with c2: product_card(keys[1])
 
     # =========================
-    # FOOTER (✅ 사용자가 준 하단 블록 추가)
+    # FOOTER
     # =========================
     st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
     st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
@@ -690,7 +695,6 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
-
 
 
 
