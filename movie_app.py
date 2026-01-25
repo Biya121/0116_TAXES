@@ -1,4 +1,3 @@
-import os
 import math
 import base64
 import streamlit as st
@@ -406,7 +405,7 @@ else:
       <div class="mn-hero-content">
         <div class="mn-hero-h2">Nature on Genesis</div>
         <div class="mn-hero-h1">자연의 가치를 증명하다</div>
-        <div class="mn-hero-p">원료의 본질과 감각적인 디자인의 균형. 당신의 일상에 조용한 품격을 더합니다.</div>
+        <div class="mn-hero-p">당신의 일상에 조용한 품격을 더합니다.</div>
       </div>
     </div>
     """, unsafe_allow_html=True)
