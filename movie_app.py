@@ -167,33 +167,6 @@ def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 1
     </div>
     """
 
-def html_header_logo_rect(path: str, *, max_w: int = 520, h: int = 120, radius: int = 10) -> str:
-    """
-    ✅ 요청 반영: 'MADE IN NATURE' 제목 위에 들어가는 직사각형 헤더 로고.
-    - max_w: 로고 영역 최대 폭
-    - h: 로고 영역 높이(헤더 느낌)
-    - radius: 라운드
-    """
-    mtime = os.path.getmtime(path) if file_exists(path) else 0.0
-    uri = _to_data_uri(path, mtime)
-
-    if uri:
-        return f"""
-        <div class="mn-rect-logo-wrap">
-          <div class="mn-rect-logo" style="max-width:{max_w}px; height:{h}px; border-radius:{radius}px;">
-            <img src="{uri}" alt="Made in Nature logo" class="mn-rect-logo-img"/>
-          </div>
-        </div>
-        """
-    # 로고 파일 없을 때 공간만 유지(레이아웃 안정)
-    return f"""
-    <div class="mn-rect-logo-wrap">
-      <div class="mn-rect-logo mn-rect-logo-ph" style="max-width:{max_w}px; height:{h}px; border-radius:{radius}px;">
-        <div style="color:rgba(15,26,18,0.45); font-weight:200; letter-spacing:0.12rem;">LOGO</div>
-      </div>
-    </div>
-    """
-
 
 # =========================
 # GLOBAL STYLE
@@ -219,7 +192,7 @@ html, body, [class*="css"]{
 .main .block-container{
   max-width: 1100px;
   margin: 0 auto;
-  padding-top: 3.4rem;   /* ✅ 상단 여백 살짝 줄여 헤더 로고를 더 위로 */
+  padding-top: 3.4rem;
   padding-bottom: 2.5rem;
 }
 
@@ -228,35 +201,8 @@ html, body, [class*="css"]{
               linear-gradient(to bottom, var(--paper), #ffffff);
 }
 
-/* ✅ Rect header logo (요청한 방식) */
-.mn-rect-logo-wrap{
-  display:flex;
-  justify-content:center;
-  margin: 10px 0 8px; /* 로고 아래 제목과 간격 */
-}
-.mn-rect-logo{
-  width: 100%;
-  background: rgba(255,255,255,0.65);
-  border: 1px solid rgba(27,48,34,0.12);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.04);
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding: 10px 14px;
-}
-.mn-rect-logo-img{
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* ✅ 직사각형 안에서 비율 유지 */
-  display:block;
-}
-.mn-rect-logo-ph{
-  background: rgba(255,255,255,0.55);
-}
-
 /* Header text */
-.mn-logo-wrap{ text-align:center; padding: 6px 0 18px; } /* ✅ 로고 이미지가 위에 있으니 패딩 축소 */
+.mn-logo-wrap{ text-align:center; padding: 6px 0 18px; }
 .mn-logo-text{
   font-size: 3.0rem; letter-spacing: 0.75rem; color: var(--deep); font-weight: 200;
 }
@@ -464,27 +410,8 @@ if "animate_detail" not in st.session_state:
 
 
 # =========================
-# UI: HEADER (✅ 직사각형 로고 → 제목 위)
+# UI: HEADER (✅ 로고 제거 / 텍스트 타이틀만)
 # =========================
-# 같은 폴더에 header_logo.jpg 를 넣으면 됨 (원하는 파일명으로 바꿔도 OK)
-header_logo_path = "header_logo.jpg"
-
-# 로고 영역 규격(원하는대로 여기만 조정하면 됨)
-HEADER_LOGO_MAX_W = 560   # 가로 최대 (px)
-HEADER_LOGO_H = 110       # 세로 높이 (px)
-HEADER_LOGO_RADIUS = 12   # 라운드
-
-st.markdown(
-    html_header_logo_rect(
-        header_logo_path,
-        max_w=HEADER_LOGO_MAX_W,
-        h=HEADER_LOGO_H,
-        radius=HEADER_LOGO_RADIUS,
-    ),
-    unsafe_allow_html=True
-)
-
-# 텍스트 타이틀/태그는 그대로
 st.markdown(f"""
 <div class="mn-logo-wrap">
   <div class="mn-logo-text">MADE IN NATURE</div>
@@ -725,6 +652,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
