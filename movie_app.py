@@ -1,5 +1,8 @@
 import math
 import base64
+import os
+from typing import Optional, Union, Sequence
+
 import streamlit as st
 
 # =========================
@@ -21,8 +24,9 @@ except Exception:
 # =========================
 # UTIL
 # =========================
-def file_exists(path: str) -> bool:
-    return bool(path) and os.path.isfile(path)
+def file_exists(path: Optional[str]) -> bool:
+    """Path가 문자열이고 실제 파일이면 True."""
+    return bool(path) and isinstance(path, str) and os.path.isfile(path)
 
 def image_or_placeholder(path: str, *, height: int = 420, radius: int = 14):
     """Show image if exists; otherwise show a clean placeholder (no warning blocks)."""
@@ -117,14 +121,17 @@ def section_title(text: str):
     st.markdown("<div class='mn-subline'></div>", unsafe_allow_html=True)
 
 # ---- (Collections) HTML-only image to prevent the “white box above image” ----
-def _to_data_uri(path: str) -> str | None:
+def _to_data_uri(path: str) -> Optional[str]:
     if not file_exists(path):
         return None
     ext = os.path.splitext(path)[1].lower().replace(".", "")
     mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "webp": "image/webp"}.get(ext, "image/png")
-    with open(path, "rb") as f:
-        b64 = base64.b64encode(f.read()).decode("utf-8")
-    return f"data:{mime};base64,{b64}"
+    try:
+        with open(path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+        return f"data:{mime};base64,{b64}"
+    except Exception:
+        return None
 
 def html_square_image_or_placeholder(path: str, *, size_px: int, radius: int = 14) -> str:
     """
@@ -495,9 +502,6 @@ def render_home_page():
                 st.session_state.showcase_page = (st.session_state.showcase_page + 1) % total_pages
                 st.rerun()
 
-    # ✅ 쇼케이스 이미지가 안 보이던 문제 해결:
-    #    - 쇼케이스만 st.image로 표시 (Streamlit이 파일 경로 렌더링을 가장 안정적으로 처리)
-    #    - 500x500: width=500 + 높이는 원본 비율이지만, 정사각 느낌이 필요하면 이미지 자체를 500x500로 만들어두는 게 가장 확실
     start = st.session_state.showcase_page * per_page
     page_imgs = src[start:start + per_page]
 
@@ -529,8 +533,6 @@ def render_home_page():
     def product_card(product_key: str):
         p = PRODUCTS[product_key]
 
-        # ✅ 콜렉션 이미지 1000px + “이미지 위 흰 박스” 방지:
-        #    카드 전체를 한 덩어리 HTML로 렌더링(열고 닫는 div를 나눠서 찍지 않음)
         card_html = f"""
         <div class="mn-card">
           {html_square_image_or_placeholder(p["list_image"], size_px=1000, radius=14)}
@@ -611,6 +613,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
