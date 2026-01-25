@@ -1,3 +1,4 @@
+import math  # ✅ 추가: math.ceil() 사용 때문에 필요
 import base64
 import os
 from typing import Optional
@@ -370,7 +371,6 @@ PRODUCTS = {
         "detail_image": "night_detail.jpg",
     },
 
-    # (2) 코코넛 수세미 → 비즈왁스랩으로 교체
     "비즈왁스랩": {
         "category": "생활잡화",
         "title": "비즈왁스 랩",
@@ -423,14 +423,12 @@ if "animate_detail" not in st.session_state:
 # =========================
 # UI: HEADER
 # =========================
-# (3) 로고 공간 마련: logo.png가 있으면 표시, 없으면 슬롯만 보여서 "공간" 확인 가능
 logo_path = "logo.png"
 logo_uri = _to_data_uri(logo_path) if file_exists(logo_path) else None
 
 if logo_uri:
     logo_block = f"<div class='mn-logo-slot'><img class='mn-logo-img' src='{logo_uri}' alt='logo'/></div>"
 else:
-    # 로고가 없더라도 '공간 마련'이 눈에 보이도록 슬롯만 표시
     logo_block = "<div class='mn-logo-slot'></div>"
 
 st.markdown(f"""
@@ -483,7 +481,6 @@ def render_detail_page(product_key: str):
         st.session_state.selected_product_key = None
         st.rerun()
 
-    # (6) 스타트 값: 진입 시 무조건 맨 위 + 부드러운 전환
     components.html("<script>window.scrollTo(0,0);</script>", height=0)
     if st.session_state.animate_detail:
         st.markdown("<div class='mn-fadein'>", unsafe_allow_html=True)
@@ -518,7 +515,6 @@ def render_detail_page(product_key: str):
     else:
         image_or_placeholder(str(detail), height=740, radius=14)
 
-    # (5) 뒤로가기 버튼: 사진 다 나온 뒤에만 보이게
     st.markdown("<div style='height:22px;'></div>", unsafe_allow_html=True)
     col_l, col_c, col_r = st.columns([1, 2, 1])
     with col_c:
@@ -536,11 +532,8 @@ def render_detail_page(product_key: str):
 # PAGE: HOME (Showcase + Collections)
 # =========================
 def render_home_page():
-    # BRAND SHOWCASE
     section_title("BRAND SHOWCASE")
 
-    # (4) 8칸 확장: 더 이상 valid_showcase로 줄이지 않음.
-    # 파일이 없어도 placeholder로 8칸 유지되어 "확장"이 바로 보임.
     showcase_images = ["img1.png", "img2.png", "img3.png", "img4.png", "img5.png", "img6.png", "img7.png", "img8.png"]
     src = showcase_images
 
@@ -590,17 +583,10 @@ def render_home_page():
             else:
                 square_placeholder(page_imgs[1], size=500, radius=14)
 
-    # COLLECTIONS
     section_title("COLLECTIONS")
 
     tabs = st.tabs(["화장품 & 화장소품", "건강식품", "생활잡화"])
 
-    # (1) 탭에서 "코드가 그대로 출력"되는 깨짐 방지:
-    # card_html 전체를 한 덩어리로 넣지 않고,
-    # - 카드 wrapper
-    # - 이미지 html
-    # - 텍스트(제목/설명)
-    # 순서로 분리해서 넣어 Markdown 파서가 깨지는 케이스를 줄임 (레이아웃은 동일)
     def product_card(product_key: str):
         p = PRODUCTS[product_key]
 
@@ -613,7 +599,7 @@ def render_home_page():
         if st.button("제품 상세 보기", key=f"view_{product_key}", use_container_width=True):
             st.session_state.page = "detail"
             st.session_state.selected_product_key = product_key
-            st.session_state.animate_detail = True  # (6) 상세 진입 애니메이션 트리거
+            st.session_state.animate_detail = True
             st.rerun()
 
     with tabs[0]:
@@ -640,40 +626,6 @@ def render_home_page():
         if len(keys) > 1:
             with c2: product_card(keys[1])
 
-    # FOOTER
-    st.markdown("<div class='mn-footer'>", unsafe_allow_html=True)
-    st.markdown("<div class='mn-footer-brand'>MADE IN NATURE</div>", unsafe_allow_html=True)
-    st.markdown("<div style='width:34px;height:1px;background:#C5A059;margin:18px auto 22px;'></div>", unsafe_allow_html=True)
-
-    st.markdown(
-        "<div class='mn-footer-muted'>"
-        "자연의 본질을 연구하고 지속 가능한 가치를 디자인합니다.<br>"
-        "우리는 당신의 일상이 자연과 더 가까워질 수 있도록<br>"
-        "최상의 원료와 장인 정신을 고집합니다."
-        "</div>",
-        unsafe_allow_html=True
-    )
-
-    st.markdown("<div style='height:18px;'></div>", unsafe_allow_html=True)
-
-    cols = st.columns(4)
-    labels = ["BRAND STORY", "COLLECTIONS", "SUSTAINABILITY", "CONTACT"]
-    urls = ["https://example.com"] * 4
-
-    for i, col in enumerate(cols):
-        with col:
-            try:
-                st.link_button(labels[i], urls[i], use_container_width=True)
-            except Exception:
-                st.button(labels[i], use_container_width=True)
-
-    st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
-    st.caption("주식회사 메이드인네이처 | 서울특별시 성동구 성수동 자연길 123")
-    st.caption("Customer Care. 02-1234-5678 | Email. official@madeinnature.com")
-    st.caption("Instagram. @madeinnature_official")
-    st.caption("© 2026 MADE IN NATURE. ALL RIGHTS RESERVED.  ·  Nature on Genesis.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
 
 # =========================
 # ROUTER
@@ -682,6 +634,7 @@ if st.session_state.page == "detail" and st.session_state.selected_product_key:
     render_detail_page(st.session_state.selected_product_key)
 else:
     render_home_page()
+
 
 
 
